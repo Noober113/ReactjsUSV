@@ -9,4 +9,8 @@ const getAllUser = (inputId) => {
     return axios.get(`http://localhost:8080/api/get-all-users?id=${inputId}`);
 }
 
-export { handleLogin, getAllUser }
+const createNewUserService = (data) => {
+    return axios.post('http://localhost:8080/api/create-user', data);
+}
+
+export { handleLogin, getAllUser, createNewUserService }

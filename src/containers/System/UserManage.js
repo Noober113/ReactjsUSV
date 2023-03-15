@@ -3,18 +3,24 @@ import { FormattedMessage } from 'react-intl';
 import { connect } from 'react-redux';
 import './UserManage.scss';
 import { getAllUser } from '../../services/userService';
-
+import ModalUser from './ModalUser';
+import { createNewUserService } from '../../services/userService';
 
 class UserManage extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            arrUsers: []
+            arrUsers: [],
+            isOpenModalUser: false
         }
     }
 
     async componentDidMount() {
+        await this.getAllUserFromReact();
+    }
+
+    getAllUserFromReact = async () => {
         let response = await getAllUser('ALL');
         // console.log('get all user', response.data.users)
         if (response && response.data.errCode === 0) {
@@ -24,15 +30,52 @@ class UserManage extends Component {
         }
     }
 
+    handleAddNewUser = () => {
+        this.setState({
+            isOpenModalUser: true,
+        })
+    }
+
+    toggleUserModal = () => {
+        this.setState({
+            isOpenModalUser: !this.state.isOpenModalUser,
+        })
+    }
+
+    createNewUser = async (data) => {
+        try {
+            let response = await createNewUserService(data);
+            if (response && response.data.errCode !== 0) {
+                alert(response.data.errMessage)
+            } else {
+                await this.getAllUserFromReact();
+                this.setState({
+                    isOpenModalUser: false,
+                })
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }
 
     render() {
         // console.log('1', this.state)
         let arrUser = this.state.arrUsers;
         return (
+            // form use: https://codepen.io/JoannaEl/pen/ZjaBvr
             <div>
+                <ModalUser
+                    isOpen={this.state.isOpenModalUser}
+                    toggleFromParent={this.toggleUserModal}
+                    createNewUser={this.createNewUser}
+                />
                 <section>
                     {/* <!--for demo wrap--> */}
                     <h1>Manage user table</h1>
+                    <button type="button"
+                        className="btn btn-outline-secondary px-3 mb-3"
+                        onClick={() => this.handleAddNewUser()}>
+                        <i className="fas fa-plus"></i> Add new user</button>
                     <div className="tbl-header">
                         <table cellPadding="0" cellSpacing="0" border="0">
                             <thead>
@@ -50,7 +93,6 @@ class UserManage extends Component {
                         <table cellpadding="0" cellspacing="0" border="0">
                             <tbody>
                                 {arrUser && arrUser.map((item, index) => {
-                                    console.log('checkmap', item, index)
                                     return (
                                         <tr key={index}>
                                             <td>{item.email}</td>
