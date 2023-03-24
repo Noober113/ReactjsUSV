@@ -1,5 +1,5 @@
 {
-  "name": "react-app-hoi-dan-it",
+  "name": "react-app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -10,9 +10,13 @@
     "bootstrap": "^5.0.1",
     "connected-react-router": "^6.9.1",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "leaflet": "^1.7.1",
+    "leaflet-deepzoom": "^2.0.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.0",
     "node-sass": "^6.0.0",
+    "ol-mapbox-style": "^10.3.4",
     "react": "^17.0.2",
     "react-auth-wrapper": "^1.0.0",
     "react-autosuggest": "^10.1.0",
@@ -22,6 +26,8 @@
     "react-dom": "^17.0.2",
     "react-flatpickr": "^3.10.7",
     "react-intl": "^5.20.2",
+    "react-leaflet": "^3.1.0",
+    "react-leaflet-tracking-marker": "^1.0.16",
     "react-redux": "^7.2.4",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
@@ -34,7 +40,8 @@
     "redux-persist": "^5.10.0",
     "redux-state-sync": "^2.1.0",
     "redux-thunk": "^2.3.0",
-    "typescript": "^4.3.2"
+    "typescript": "^4.3.2",
+    "url": "^0.11.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -45,16 +52,9 @@
   "eslintConfig": {
     "extends": "react-app"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ]
 }
