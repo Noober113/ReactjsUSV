@@ -1,25 +1,65 @@
-// .container-fluid{
-// padding: 0px !important;
-// margin: 0px !important;
+// // .container-fluid{
+// // padding: 0px !important;
+// // margin: 0px !important;
 
-  .hienmap{
-    // // background-color: transparent;
-    // padding-bottom: 100%;
-    width: 100%;
-    height: 100%;
+//   .hienmap{
+//     // // background-color: transparent;
+//     // padding-bottom: 100%;
+//     width: 100%;
+//     height: 100%;
 
-    // .MapContainer{
-    //     height: 90vh;
-    //     width: 100vw;
-    //     z-index: -1;
-    // }
+//     // .MapContainer{
+//     //     height: 90vh;
+//     //     width: 100vw;
+//     //     z-index: -1;
+//     // }
 
-    // .icload{
-    //   margin: auto;
-    //   position: relative;
+//     // .icload{
+//     //   margin: auto;
+//     //   position: relative;
 
-    // }
-    // .loadtext{
-    //   margin: auto;
-    // }
-  }
+//     // }
+//     // .loadtext{
+//     //   margin: auto;
+//     // }
+//   }
+
+.align-items-center{
+  z-index: 420;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.wrapper {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+.left-panel {
+  position: absolute;
+  width: 300px;
+  height: calc(90vh - 2rem);
+  left: 1rem;
+  top: 1rem;
+  z-index: 410;
+  background-color: #fff;
+}
+
+.item-number {
+  display: inline-block;
+  width: 60px;
+}
+
+.list-group-item:hover {
+  background-color: #eee;
+  cursor: pointer;
+}
+
+.list-group-flush > .list-group-item:last-child {
+  border-bottom-width: 0px;
+  width: 100%;
+}

@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { formatDiagnosticsWithColorAndContext } from 'typescript';
 import './HomeHeader.scss';
+import { emitter } from '../../utils/emitter';
+
 
 
 class HomeHeader extends Component {
@@ -10,22 +12,26 @@ class HomeHeader extends Component {
         this.state = {
             dropdown: false,
             menuBar: false,
+            setting: false,
         }
     }
+
 
     handleUserDropDown = () => {
         this.setState({
             dropdown: !this.state.dropdown,
         })
-        console.log('event:', this.state.dropdown)
+        console.log('event in header:', this.state.dropdown)
     }
 
     handleMenuBar = () => {
         this.setState({
             menuBar: !this.state.menuBar,
         })
-        console.log('event:', this.state.menuBar)
+        emitter.emit('EVENT_CLICK_SETTINNG');
     }
+
+
 
     render() {
         return (
@@ -54,52 +60,10 @@ class HomeHeader extends Component {
                         </div> */}
                     </div>
                 </div>
-                <div className={this.state.menuBar ? "visible" : 'invisible'}>
-                    <div className="vh-100 d-flex align-items-center position-fixed start-0 top-0" role="navigation">
-                        <div className="p-2">
-                            <div id="mainNav">
-                                <ul className="list-unstyled rounded ms-2">
-                                    <li>
-                                        <a className="vlink rounded border-0"
-                                            href="#">
-                                            <i className="fas fa-home"></i>
-                                            <span>Home</span></a>
-                                    </li>
-                                    <li>
-                                        <a className="vlink rounded"
-                                            href="#">
-                                            <i className="fas fa-cog "></i>
-                                            <span>Setting</span></a>
-                                    </li>
-                                    <li>
-                                        <a className="vlink rounded"
-                                            href="#">
-                                            <i className="fas fa-chart-line"></i>
-                                            <span>Analysis</span></a>
-                                    </li>
-                                    <li>
-                                        <a className="vlink rounded"
-                                            href="#">
-                                            <i className="fas fa-language"></i>
-                                            <span>Language</span></a>
-                                    </li>
-                                    <li>
-                                        <a className="vlink rounded"
-                                            href="#">
-                                            <i className="fas fa-exclamation-circle"></i>
-                                            <span>About Us</span></a>
-                                    </li>
-                                    <li>
-                                        <a className="vlink rounded"
-                                            onClick={() => { this.handleMenuBar() }}>
-                                            <i className="fas fa-sign-out-alt fa-rotate-180"></i>
-                                            <span>Close</span></a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+                {/*  Menu left bar */}
+
+
             </div>
         );
     }

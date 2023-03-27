@@ -1,12 +1,12 @@
 import React, { Component, useState, useEffect } from 'react';
-import { Map, TileLayer, MapContainer, Marker, Popup, useMapEvents, useMap, MapConsumer, Polyline, Circle } from 'react-leaflet';
+import { Map, TileLayer, MapContainer, Marker, Popup, useMapEvents, useMap, MapConsumer, Polyline, Circle, ZoomControl } from 'react-leaflet';
 // import './MyMap.scss';
 import 'leaflet/dist/leaflet.css';
 import { connect } from 'react-redux';
-// const center = [10.8220589, 106.6867365]; //lat lon in the 1st call
 import 'leaflet-deepzoom';
 import { L, map, icon } from 'leaflet';
-// import './event'
+import { emitter } from '../../../utils/emitter';
+
 
 
 
@@ -37,6 +37,7 @@ class MyMap extends Component {
         //     tolerance: 0.8
         // }).addTo(map);
     }
+
     // mapIsReadyCallback(map) {
     //     console.log(map);
     // }
@@ -48,13 +49,9 @@ class MyMap extends Component {
     //     setMarkers((markers) => [...markers, { lat, lng }]);
     // };
 
-
-
-
-
     render() {
         return (
-            <div>
+            <div >
                 <MapContainer
                     center={[10.8220589, 106.6867365]}
                     zoom={18}
@@ -62,6 +59,7 @@ class MyMap extends Component {
                         width: '100vw',
                         height: '92vh'
                     }}
+                    zoomControl={false} // disable default zoom control
 
                 >
                     <TileLayer
@@ -69,6 +67,8 @@ class MyMap extends Component {
                         attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> contributors'
                         maxZoom={20}
                     />
+                    {/* add zoom control to top right corner  */}
+                    <ZoomControl position="topright" />
                     <LocationMarker />
                 </MapContainer>
 
@@ -127,6 +127,7 @@ function LocationMarker() {
                 setPositions([...positions, newPosition]);
                 map.flyTo(newPosition, map.getZoom());
             }
+            emitter.emit('EVENT_POINT_IN_MAP', { newPosition });
         },
 
     });
@@ -145,19 +146,21 @@ function LocationMarker() {
 
     return (
         <>
-            {positions.map((position, index) => (
-                <Marker key={index} position={position} icon={myIcon} >
-                    <Popup>
-                        point number {index + 1}
-                        <br />
-                        lat: {position.lat}
-                        <br />
-                        lon:{position.lng}
-                    </Popup>
-                    {/* Add a circle around the marker  unit meter */}
-                    <Circle center={position} radius={5} />
-                </Marker>
-            ))}
+            {positions.map((position, index) => {
+                return (
+                    <Marker key={index} position={position} icon={myIcon} >
+                        <Popup>
+                            point number {index + 1}
+                            <br />
+                            lat: {position.lat}
+                            <br />
+                            lon: {position.lng}
+                        </Popup>
+                        {/* Add a circle around the marker  unit meter */}
+                        <Circle center={position} radius={5} />
+                    </Marker>
+                )
+            })}
             {polylinePositions.length > 1 && <Polyline positions={polylinePositions} />}
         </>
     );
@@ -177,16 +180,16 @@ function LocationMarker() {
 //     )
 // }
 
-// // const mapStateToProps = state => {
-// //     return {
-// //         isLoggedIn: state.user.isLoggedIn
-// //     };
-// // };
+// const mapStateToProps = state => {
+//     return {
+//         isLoggedIn: state.user.isLoggedIn
+//     };
+// };
 
-// // const mapDispatchToProps = dispatch => {
-// //     return {
-// //     };
-// // };
+// const mapDispatchToProps = dispatch => {
+//     return {
+//     };
+// };
 
 export default connect()(MyMap);
 
