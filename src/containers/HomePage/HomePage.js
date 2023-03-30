@@ -7,6 +7,7 @@ import { Map, TileLayer, MapContainer, Marker, Popup } from 'react-leaflet';
 // import event from './Map/event'
 // import MapWithMarkers from './Map/event';
 import { emitter } from '../../utils/emitter';
+import { createCoor, getAllCoor } from '../../services/userService';
 
 
 
@@ -22,17 +23,28 @@ class HomePage extends Component {
             isClose: false,
             isShowList: false,
             coor: { lat: 0, lng: 0 },
-            coorList: []
+            coorList: [],
+            isStart: false,
+            coorFromEsp: [],
         }
         this.listenToEmitter();
     }
 
-    // async componentDidMount() {
-    // }
+    async componentDidMount() {
+        try {
+            setInterval(async () => {
+                let data = await getAllCoor();
+                // console.log('lat:', data.data.users.value1, 'lng', data.data.users.value2)
+                emitter.emit('RECEIVE_FROM_ESP', { data });
 
-    // mapIsReadyCallback(map) {
-    //     console.log(map);
-    // }
+            }, 200);
+
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+
     listenToEmitter() {
         emitter.on('EVENT_CLICK_SETTINNG', () => {
             this.setState({
@@ -47,7 +59,7 @@ class HomePage extends Component {
                 coor: newPosition,
                 coorList: [...prevState.coorList, newPosition] // add new position to list
             }));
-            // console.log('lat:', this.state.coorList);
+            console.log('lat:', this.state.coorList);
         });
     }
 
@@ -78,6 +90,32 @@ class HomePage extends Component {
         })
     }
 
+    handleStartUsv = async () => {
+        try {
+            for (let i = 0; i < this.state.coorList.length; i++) {
+                let data = await createCoor(this.state.coorList[i].newPosition.lat, this.state.coorList[i].newPosition.lng);
+
+                if (data && data.data.errCode !== 0) {
+                    this.setState({
+                        errMessage: data.data.message
+                    })
+                }
+                if (data && data.data.errCode === 0) {
+                    console.log('success')
+                    console.log(data.config.data)
+                }
+            };
+
+        } catch (error) {
+            if (error.response) {
+                if (error.response.data) {
+                    this.setState({
+                        errMessage: error.response.data.message
+                    })
+                }
+            }
+        }
+    }
 
 
     render() {
@@ -158,10 +196,10 @@ class HomePage extends Component {
                                                         Danh sách
                                                     </button>
                                                 </h2>
-                                                {/* <div id="collapseOne"
-                                                    className={this.state.isShowList ? "accordion-collapse collapse show" : 'accordion-collapse collapse'} > */}
                                                 <div id="collapseOne"
-                                                    className="accordion-collapse collapse show">
+                                                    className={this.state.isShowList ? "accordion-collapse collapse show" : 'accordion-collapse collapse'} >
+                                                    {/* <div id="collapseOne"
+                                                    className="accordion-collapse collapse show"> */}
                                                     <div className="accordion-body">
 
                                                         <ul className="list-group list-group-flush d-flex align-items-center" id="lstUnv">
@@ -180,6 +218,14 @@ class HomePage extends Component {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                <div>
+                                    <button type="button"
+                                        className="btn btn-primary"
+                                        onClick={(event) => { this.handleStartUsv(event) }}>
+                                        Start
+                                    </button>
+                                    <button type="button" className="btn btn-secondary">Stop</button>
                                 </div>
                             </div>
                         </div>

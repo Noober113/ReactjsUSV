@@ -6,7 +6,8 @@ import { connect } from 'react-redux';
 import 'leaflet-deepzoom';
 import { L, map, icon } from 'leaflet';
 import { emitter } from '../../../utils/emitter';
-
+import { LeafletTrackingMarker } from 'react-leaflet-tracking-marker';
+import airplane from '../../../assets/images/boat.png';
 
 
 
@@ -20,22 +21,23 @@ class MyMap extends Component {
             // link: `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${this.state.myAPIKey}`,
             // // mapIsReadyCallback: this.mapIsReadyCallback.bind(this),
             // [markers, setMarkers]  useState([]);
+            espCoor: { lat: 10.8220589, lng: 106.6867365 },
         }
+        this.listenToEmitter();
+
     }
 
     async componentDidMount() {
-        // const map = L.map('map', {
-        //     zoomControl: false,
-        //     zoomSnap: 0.25,
-        //     minZoom: 0,
-        //     maxZoom: 5,
-        // }).setView([0, 0], 2);
 
-        // L.tileLayer.zoomify('http://www.example.com/ZoomifyImageFolder/', {
-        //     width: 1000,
-        //     height: 1000,
-        //     tolerance: 0.8
-        // }).addTo(map);
+    }
+
+    listenToEmitter() {
+        emitter.on('RECEIVE_FROM_ESP', data => {
+            const { value1, value2 } = data.data.data.users;
+            this.setState(({
+                espCoor: { lat: value1, lng: value2 },
+            }));
+        });
     }
 
     // mapIsReadyCallback(map) {
@@ -70,6 +72,8 @@ class MyMap extends Component {
                     {/* add zoom control to top right corner  */}
                     <ZoomControl position="topright" />
                     <LocationMarker />
+                    <DisplayMarker
+                        espCoor={this.state.espCoor} />
                 </MapContainer>
 
             </div>
@@ -115,6 +119,8 @@ class MyMap extends Component {
 //     console.log('map center:', map.getCenter())
 //     return null
 // }
+
+// user setting coordition
 
 
 function LocationMarker() {
@@ -162,6 +168,38 @@ function LocationMarker() {
                 )
             })}
             {polylinePositions.length > 1 && <Polyline positions={polylinePositions} />}
+        </>
+    );
+}
+
+
+function DisplayMarker(props) {
+    const { espCoor } = props;
+
+
+    const myIcon = new icon({
+        iconSize: [45, 45],
+        popupAnchor: [2, -20],
+        iconUrl: airplane
+    });
+
+    const { lat, lng } = espCoor;
+    const [prevPos, setPrevPos] = useState([lat, lng]);
+
+    useEffect(() => {
+        if (prevPos[1] !== lng && prevPos[0] !== lat) setPrevPos([lat, lng]);
+    }, [lat, lng, prevPos]);
+
+    return (
+        <>
+            <LeafletTrackingMarker
+                icon={myIcon}
+                position={[lat, lng]}
+                previousPosition={prevPos}
+                duration={1000}
+            >
+                <Popup>{"Hello, there! 🐱‍🏍 "}</Popup>
+            </LeafletTrackingMarker>
         </>
     );
 }

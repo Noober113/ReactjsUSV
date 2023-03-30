@@ -21,4 +21,12 @@ const deleteUserService = (id) => {
     });
 }
 
-export { handleLogin, getAllUser, createNewUserService, deleteUserService }
+const createCoor = (lat, lng) => {
+    return axios.post('http://localhost:8080/api/create-coor', { lat, lng });
+}
+
+const getAllCoor = () => {
+    return axios.get(`http://localhost:8080/api/get-coor`);
+}
+
+export { handleLogin, getAllUser, createNewUserService, deleteUserService, createCoor, getAllCoor }
