@@ -22,6 +22,7 @@ class MyMap extends Component {
             // // mapIsReadyCallback: this.mapIsReadyCallback.bind(this),
             // [markers, setMarkers]  useState([]);
             espCoor: { lat: 10.8220589, lng: 106.6867365 },
+            count: 0,
         }
         this.listenToEmitter();
 
@@ -37,6 +38,12 @@ class MyMap extends Component {
             this.setState(({
                 espCoor: { lat: value1, lng: value2 },
             }));
+        });
+        emitter.on('NUMBER_POINT_IN_MAP', countAddCoor => {
+            this.setState(({
+                count: countAddCoor,
+            }));
+            // console.log('map', countAddCoor)
         });
     }
 
@@ -71,7 +78,9 @@ class MyMap extends Component {
                     />
                     {/* add zoom control to top right corner  */}
                     <ZoomControl position="topright" />
-                    <LocationMarker />
+                    <LocationMarker
+                        count={this.state.count}
+                    />
                     <DisplayMarker
                         espCoor={this.state.espCoor} />
                 </MapContainer>
@@ -123,20 +132,11 @@ class MyMap extends Component {
 // user setting coordition
 
 
-function LocationMarker() {
+function LocationMarker(props) {
     const [positions, setPositions] = useState([]);
+    const { count } = props;
 
-    const map = useMapEvents({
-        click(e) {
-            const newPosition = e.latlng;
-            if (positions.length < 15) { // Add a check to make sure the array does not exceed 15 items
-                setPositions([...positions, newPosition]);
-                map.flyTo(newPosition, map.getZoom());
-            }
-            emitter.emit('EVENT_POINT_IN_MAP', { newPosition });
-        },
 
-    });
 
     // Define custom icon
     const myIcon = new icon({
@@ -150,8 +150,40 @@ function LocationMarker() {
     const polylinePositions = positions.map((position) => [position.lat, position.lng]);
 
 
+    const removeMarker = (position) => {
+        setPositions(positions.filter((m) => m !== position));
+        emitter.emit('DELETE_EVENT_IN_MAP', { position });
+    };
+
+    const map = useMapEvents({
+        click(e) {
+            const newPosition = e.latlng;
+            if (positions.length < count) { // Add a check to make sure the array does not exceed 15 items
+                setPositions([...positions, newPosition]);
+                // map.flyTo(newPosition, map.getZoom());
+                // console.log(newPosition)
+                emitter.emit('EVENT_POINT_IN_MAP', { newPosition });
+            }
+        },
+    });
+
+    useEffect(() => {
+        const deleteEventListener = (data) => {
+            const position = data.position;
+            removeMarker(position);
+        };
+
+        emitter.on('DELETE_EVENT_IN_HOME', deleteEventListener);
+
+        return () => {
+            emitter.off('DELETE_EVENT_IN_HOME', deleteEventListener);
+        };
+    }, [positions]);
+
     return (
         <>
+            {/* <MapContainer
+                onclick={handleAddMarker}> */}
             {positions.map((position, index) => {
                 return (
                     <Marker key={index} position={position} icon={myIcon} >
@@ -161,6 +193,8 @@ function LocationMarker() {
                             lat: {position.lat}
                             <br />
                             lon: {position.lng}
+                            {/* <br />
+                            <button onClick={() => removeMarker(position)}>Remove this point</button> */}
                         </Popup>
                         {/* Add a circle around the marker  unit meter */}
                         <Circle center={position} radius={5} />
@@ -168,6 +202,7 @@ function LocationMarker() {
                 )
             })}
             {polylinePositions.length > 1 && <Polyline positions={polylinePositions} />}
+            {/* </MapContainer> */}
         </>
     );
 }

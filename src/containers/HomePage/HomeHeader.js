@@ -17,10 +17,27 @@ class HomeHeader extends Component {
             coorList: [],
             isClose: false,
             countAddCoor: 0,
-            coordinates: []
+            coordinates: [],
+            displayedCoordinates: [],
         }
+        this.listenToEmitter();
     }
 
+    listenToEmitter() {
+        emitter.on('EVENT_POINT_IN_MAP', newPosition => {
+            this.setState(prevState => ({
+                coor: newPosition.newPosition,
+                coorList: [...prevState.coorList, newPosition.newPosition],
+                displayedCoordinates: [...prevState.displayedCoordinates, newPosition.newPosition],
+            }));
+            // console.log('event in header:', this.state.displayedCoordinates)
+        });
+        emitter.on('DELETE_EVENT_IN_MAP', position => {
+            this.setState(prevState => ({
+                displayedCoordinates: prevState.displayedCoordinates.filter(coor => !(coor.lat === position.position.lat && coor.lng === position.position.lng))
+            }));
+        });
+    }
 
     handleUserDropDown = () => {
         this.setState({
@@ -58,15 +75,7 @@ class HomeHeader extends Component {
         })
     }
 
-    listenToEmitter() {
-        emitter.on('EVENT_POINT_IN_MAP', newPosition => {
-            this.setState(prevState => ({
-                coor: newPosition,
-                coorList: [...prevState.coorList, newPosition] // add new position to list
-            }));
-            // console.log('lat:', this.state.coorList);
-        });
-    }
+
 
     handleCloseMenuBar = () => {
         this.setState({
@@ -77,23 +86,37 @@ class HomeHeader extends Component {
     addCoorBut = () => {
         if (this.state.countAddCoor < 15) {
             this.setState({
-                countAddCoor: this.state.countAddCoor + 1,
-                coordinates: [...this.state.coordinates, `Coordinate ${this.state.countAddCoor + 1}`] // Add a new coordinate to the array
+                countAddCoor: ++this.state.countAddCoor,
+                coordinates: [...this.state.coordinates, `Coordinate ${this.state.countAddCoor}`] // Add a new coordinate to the array
             })
+            // console.log("New coordinates:", this.state.newDisplayedCoords);
+            emitter.emit('NUMBER_POINT_IN_MAP', this.state.countAddCoor);
+
         }
+
     }
 
-    delCoorBut = () => {
-        if (this.state.countAddCoor > 0) {
+    delCoorBut = (index) => {
+        const { countAddCoor, coordinates, displayedCoordinates } = this.state;
+        if (countAddCoor > 0) {
+            const newCoordinates = [...coordinates];
+            newCoordinates.splice(index, 1);
             this.setState({
-                countAddCoor: this.state.countAddCoor - 1,
-                coordinates: this.state.coordinates.slice(0, -1) // Remove the last coordinate from the array
-            })
+                countAddCoor: countAddCoor - 1,
+                coordinates: newCoordinates
+            }, () => {
+                // The setState function is asynchronous, so we need to use a callback
+                // to make sure that we are working with the updated state.
+                emitter.emit('NUMBER_POINT_IN_MAP', countAddCoor - 1);
+                if (displayedCoordinates[index] && displayedCoordinates[index].lat && displayedCoordinates[index].lng) {
+                    emitter.emit('DELETE_EVENT_IN_HOME', { position: displayedCoordinates[index] });
+                }
+            });
         }
     }
 
     render() {
-        const { countAddCoor, coordinates } = this.state; // Destructure state variables for easier access in the render method
+        const { countAddCoor, coordinates, displayedCoordinates } = this.state; // Destructure state variables for easier access in the render method
         return (
             <div>
                 <div className='container-fluid'>
@@ -211,25 +234,32 @@ class HomeHeader extends Component {
                                                                 ))} */}
                                                             <li className='pb-2'>
                                                                 <button type="button" className="btn btn-primary  addnewcoor"
-                                                                    onClick={() => { this.addCoorBut() }}>
+                                                                    onClick={() => {
+                                                                        // console.log("Add button clicked");
+                                                                        this.addCoorBut()
+                                                                    }}>
                                                                     <i className="fas fa-plus"></i> Add new coordinates
                                                                 </button>
                                                             </li>
                                                             {coordinates.map((item, index) => (
                                                                 <li className="list-group-item displayoptioncoor" key={index}>
-                                                                    #{++index}
+                                                                    #{index + 1}
                                                                     <i className="fas fa-trash-alt p-2 deletebut"
-                                                                        onClick={() => { this.delCoorBut() }}></i>
+                                                                        onClick={() => {
+                                                                            // console.log("Deleting coordinate at index", index);
+                                                                            this.delCoorBut(index)
+                                                                        }}></i>
                                                                     <form>
                                                                         <div className="form-group d-flex mb-1">
                                                                             <label className='disLat'>Lat: </label>
-                                                                            <input type="text" className="form-control" placeholder="Input Latitude" />
+                                                                            <input type="text" className="form-control" placeholder="Input Latitude" value={displayedCoordinates[index]?.lat || ""} readOnly />
                                                                         </div>
                                                                         <div className="form-group d-flex">
                                                                             <label className='disLng'>Lng: </label>
-                                                                            <input type="text" className="form-control" placeholder="Input Longitude" />
+                                                                            <input type="text" className="form-control" placeholder="Input Longitude" value={displayedCoordinates[index]?.lng || ''} readOnly />
                                                                         </div>
-                                                                    </form>                                                                </li>
+                                                                    </form>
+                                                                </li>
                                                             ))}
 
                                                         </ul>
