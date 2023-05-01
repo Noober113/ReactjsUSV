@@ -7,11 +7,10 @@ import { Map, TileLayer, MapContainer, Marker, Popup } from 'react-leaflet';
 // import event from './Map/event'
 // import MapWithMarkers from './Map/event';
 import { emitter } from '../../utils/emitter';
-import { createCoor, getAllCoor } from '../../services/userService';
+import { getAllCoor, getExist } from '../../services/userService';
 
 
 
-// const api = process.env.MAP_API_KEY
 
 class HomePage extends Component {
 
@@ -20,52 +19,46 @@ class HomePage extends Component {
         this.state = {
             isStart: false,
             coorFromEsp: [],
+            checkCreate: false,
         }
-        // this.listenToEmitter();
+        this.listenToEmitter = this.listenToEmitter.bind(this);
     }
 
     async componentDidMount() {
-        // try {
-        // setInterval(async () => {
-        //     let data = await getAllCoor();
-        //     // console.log('lat:', data.data.users.value1, 'lng', data.data.users.value2)
-        //     emitter.emit('RECEIVE_FROM_ESP', { data });
-
-        // }, 200);
-
-        // } catch (e) {
-        //     console.log(e)
-        // }
-        // await this.listenToEmitter();
+        this.listenToEmitter();
     }
 
-
-    handleStartUsv = async () => {
-        try {
-            for (let i = 0; i < this.state.coorList.length; i++) {
-                let data = await createCoor(this.state.coorList[i].newPosition.lat, this.state.coorList[i].newPosition.lng);
-
-                if (data && data.data.errCode !== 0) {
-                    this.setState({
-                        errMessage: data.data.message
-                    })
-                }
-                if (data && data.data.errCode === 0) {
-                    console.log('success')
-                    console.log(data.config.data)
-                }
-            };
-
-        } catch (error) {
-            if (error.response) {
-                if (error.response.data) {
-                    this.setState({
-                        errMessage: error.response.data.message
-                    })
-                }
+    listenToEmitter() {
+        emitter.on('CREATE_COMPLETE', async () => {
+            console.log('create complete');
+            this.setState({
+                checkCreate: true
+            });
+            try {
+                let prevCheck = await getExist();
+                emitter.emit('CHECK_EXIST', prevCheck);
+                console.log('pre', prevCheck);
+                setInterval(async () => {
+                    let data = await getAllCoor();
+                    // console.log('lat:', data.data.users.value1, 'lng', data.data.users.value2)
+                    if (data.data.users) {
+                        emitter.emit('RECEIVE_FROM_ESP', { data });
+                    }
+                    let currentCheck = await getExist();
+                    // console.log('currentCheck:', JSON.stringify(currentCheck), 'prevCheck:', JSON.stringify(prevCheck));
+                    if (JSON.stringify(currentCheck) !== JSON.stringify(prevCheck)) {
+                        console.log('cur', currentCheck);
+                        emitter.emit('CHECK_EXIST', currentCheck);
+                        prevCheck = currentCheck;
+                    }
+                }, 200);
+            } catch (e) {
+                console.log(e);
             }
-        }
+        });
     }
+
+
 
 
     render() {

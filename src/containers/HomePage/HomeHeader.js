@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { formatDiagnosticsWithColorAndContext } from 'typescript';
 import './HomeHeader.scss';
 import { emitter } from '../../utils/emitter';
+import { createCoor, changeStatus } from '../../services/userService';
+import { round } from 'lodash';
 
 
 
@@ -19,23 +21,58 @@ class HomeHeader extends Component {
             countAddCoor: 0,
             coordinates: [],
             displayedCoordinates: [],
+            radius: 0,
+            stt: 0,
+            round: 0,
+            exist: false,
         }
         this.listenToEmitter();
     }
 
     listenToEmitter() {
         emitter.on('EVENT_POINT_IN_MAP', newPosition => {
+            // console.log('pos', newPosition)
             this.setState(prevState => ({
-                coor: newPosition.newPosition,
-                coorList: [...prevState.coorList, newPosition.newPosition],
-                displayedCoordinates: [...prevState.displayedCoordinates, newPosition.newPosition],
+                coor: newPosition,
+                coorList: [...prevState.coorList, newPosition],
+                displayedCoordinates: [...prevState.displayedCoordinates, newPosition],
             }));
-            // console.log('event in header:', this.state.displayedCoordinates)
+            console.log(this.state.coorList)
         });
         emitter.on('DELETE_EVENT_IN_MAP', position => {
             this.setState(prevState => ({
                 displayedCoordinates: prevState.displayedCoordinates.filter(coor => !(coor.lat === position.position.lat && coor.lng === position.position.lng))
             }));
+        });
+        emitter.on('CHECK_EXIST', data => {
+            if (data === 0) {
+                this.setState({
+                    exist: true
+                })
+                // console.log('data', this.state.countAddCoor)
+                // for (let i = 0; i < this.state.coordinates.length; i++) {
+                //     this.delCoorBut(i)
+                // }
+                // window.location.reload()
+            } else {
+                let i = 0;
+                for (i; i < data.length; i++) {
+                    this.setState({
+                        exist: false,
+                        countAddCoor: i + 1,
+                        coordinates: [...this.state.coordinates, `Coordinate ${this.state.countAddCoor}`]
+                    })
+                    emitter.emit('NUMBER_POINT_IN_MAP', this.state.countAddCoor);
+
+                }
+                const checkbox = document.querySelector('.form-check-input');
+                if (checkbox && this.state.exist === false) {
+                    checkbox.checked = data[0].round;
+                    checkbox.disabled = true
+                }
+                // console.log('false', data[0].round)
+                // window.location.reload()
+            }
         });
     }
 
@@ -84,36 +121,103 @@ class HomeHeader extends Component {
     }
 
     addCoorBut = () => {
-        if (this.state.countAddCoor < 15) {
-            this.setState({
-                countAddCoor: ++this.state.countAddCoor,
-                coordinates: [...this.state.coordinates, `Coordinate ${this.state.countAddCoor}`] // Add a new coordinate to the array
-            })
-            // console.log("New coordinates:", this.state.newDisplayedCoords);
-            emitter.emit('NUMBER_POINT_IN_MAP', this.state.countAddCoor);
-
+        if (this.state.exist === true) {
+            if (this.state.countAddCoor < 15) {
+                this.setState({
+                    countAddCoor: ++this.state.countAddCoor,
+                    coordinates: [...this.state.coordinates, `Coordinate ${this.state.countAddCoor}`] // Add a new coordinate to the array
+                })
+                console.log("New coordinates:", this.state.countAddCoor);
+                emitter.emit('NUMBER_POINT_IN_MAP', this.state.countAddCoor);
+            }
+        } else {
+            alert('The USV is running but editing function is under development. So if the USV has a problem please press the stop button and call a technician')
         }
+
+        // console.log(this.state.displayedCoordinates)
 
     }
 
     delCoorBut = (index) => {
-        const { countAddCoor, coordinates, displayedCoordinates } = this.state;
-        if (countAddCoor > 0) {
-            const newCoordinates = [...coordinates];
-            newCoordinates.splice(index, 1);
-            this.setState({
-                countAddCoor: countAddCoor - 1,
-                coordinates: newCoordinates
-            }, () => {
-                // The setState function is asynchronous, so we need to use a callback
-                // to make sure that we are working with the updated state.
-                emitter.emit('NUMBER_POINT_IN_MAP', countAddCoor - 1);
-                if (displayedCoordinates[index] && displayedCoordinates[index].lat && displayedCoordinates[index].lng) {
-                    emitter.emit('DELETE_EVENT_IN_HOME', { position: displayedCoordinates[index] });
-                }
-            });
+        if (this.state.exist === true) {
+            const { countAddCoor, coordinates, displayedCoordinates } = this.state;
+            if (countAddCoor > 0) {
+                const newCoordinates = [...coordinates];
+                newCoordinates.splice(index, 1);
+                this.setState({
+                    countAddCoor: countAddCoor - 1,
+                    coordinates: newCoordinates
+                }, () => {
+                    // The setState function is asynchronous, so we need to use a callback
+                    // to make sure that we are working with the updated state.
+                    emitter.emit('NUMBER_POINT_IN_MAP', countAddCoor - 1);
+                    if (displayedCoordinates[index] && displayedCoordinates[index].lat && displayedCoordinates[index].lng) {
+                        emitter.emit('DELETE_EVENT_IN_HOME', { position: displayedCoordinates[index] });
+                    }
+                });
+            }
+        } else {
+            alert('The USV is running but editing function is under development. So if the USV has a problem please press the stop button and call a technician')
+        }
+
+        // console.log(this.state.displayedCoordinates)
+    }
+
+    handleStartUsv = async () => {
+        if (this.state.exist === true) {
+            await this.setState({
+                stt: '1'
+            })
+            try {
+                for (let i = 0; i < this.state.displayedCoordinates.length; i++) {
+                    let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round);
+                };
+
+            } catch (error) {
+                console.log(error)
+            }
+        } else {
+            alert('The USV is running but editing function is under development. So if the USV has a problem please press the stop button and call a technician')
+        }
+
+    }
+
+    handleStopUsv = async () => {
+        await this.setState({
+            stt: '0'
+        })
+        try {
+            await changeStatus(this.state.stt);
+
+        } catch (error) {
+            console.log(error)
         }
     }
+
+    handleAround = (event) => {
+        this.setState({
+            round: !this.state.round
+        })
+    }
+
+    // handleOnChangeRadius = (event) => {
+    //     let value = event.target.value;
+
+    //     // Check if the first character is a dot
+    //     if (value.charAt(0) === '.') {
+    //         value = '0' + value; // Add leading 0
+    //     }
+    //     // Check if the last character is a dot
+    //     if (value.charAt(value.length - 1) === '.') {
+    //         value += '0'; // Add trailing 0
+    //     }
+    //     this.setState({
+    //         radius: value
+    //     }, () => {
+    //         emitter.emit('SET_RADIUS', this.state.radius);
+    //     }
+    //     )
+    // }
 
     render() {
         const { countAddCoor, coordinates, displayedCoordinates } = this.state; // Destructure state variables for easier access in the render method
@@ -221,18 +325,10 @@ class HomeHeader extends Component {
                                                     className={this.state.isShowList ? "accordion-collapse collapse show" : 'accordion-collapse collapse'} >
                                                     {/* <div id="collapseOne"
                                                     className="accordion-collapse collapse show"> */}
-                                                    <div className="accordion-body">
+                                                    <div className="accordion-body" style={{ height: "416px" }} >
 
-                                                        <ul className="list-group list-group-flush d-flex settingcoor" id="lstUnv">
-                                                            {/* {
-                                                                this.state.coorList.map((item, index) => (
-                                                                    <li className="list-group-item" key={index}>
-                                                                        number: {++index}<br />
-                                                                        lat: {item.newPosition.lat}<br />
-                                                                        lng: {item.newPosition.lng}
-                                                                    </li>
-                                                                ))} */}
-                                                            <li className='pb-2'>
+                                                        <ul className="list-group list-group-flush d-flex settingcoor" id="lstUnv" style={{ height: "388px", overflowY: "auto" }}>
+                                                            <li className='pb-2 navbar navbar-fixed-top green child-nav' style={{ position: 'sticky', top: 0, zIndex: 1, background: "white" }}>
                                                                 <button type="button" className="btn btn-primary  addnewcoor"
                                                                     onClick={() => {
                                                                         // console.log("Add button clicked");
@@ -270,20 +366,35 @@ class HomeHeader extends Component {
                                     </div>
                                     {/* </div> */}
                                     <div>
-                                        <div className="form-group d-flex mb-1 ipraci">
+                                        {/* <div className="form-group d-flex mb-1 ipraci">
                                             <label className='laipraci'>Circle: </label>
-                                            <input type="text" className="form-control" placeholder="Input radius" />
-                                        </div>
-                                        <div className="form-check">
+                                            <input type="number" className="form-control" placeholder="Input radius"
+                                                min="0"
+                                                onKeyPress={(event) => {
+                                                    const keyCode = event.keyCode || event.which;
+                                                    const keyValue = String.fromCharCode(keyCode);
+                                                    const validRegex = /^[\d.]+$/;
+                                                    if (!validRegex.test(keyValue)) {
+                                                        event.preventDefault();
+                                                    }
+                                                }}
+                                                onChange={(event) => this.handleOnChangeRadius(event)} />
+                                        </div> */}
+                                        <div className="form-check"
+                                            onChange={(event) => { this.handleAround(event) }}>
                                             <input type="checkbox" className="form-check-input " />
                                             <label className="form-check-label">go around</label>
                                         </div>
                                         <button type="button"
-                                            className="btn btn-outline-primary startbut"
-                                            onClick={(event) => { this.handleStartUsv(event) }}>
-                                            Start
+                                            className={this.state.exist ? "btn btn-outline-primary startbut " : 'btn btn-outline-primary startbut'}
+                                            onClick={(event) => { this.handleStartUsv(event) }}
+                                        >
+                                            {this.state.exist ? "Start" : 'Edit'}
                                         </button>
-                                        <button type="button" className="btn btn-outline-danger stopbut">Stop</button>
+                                        <button type="button" className="btn btn-outline-danger stopbut"
+                                            onClick={(event) => { this.handleStopUsv(event) }}>
+                                            Stop
+                                        </button>
                                     </div>
                                 </div>
                             </div>

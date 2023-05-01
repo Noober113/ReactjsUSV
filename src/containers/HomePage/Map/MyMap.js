@@ -16,13 +16,9 @@ class MyMap extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            // center: [10.8220589, 106.6867365],
-            // myAPIKey: process.env.MAP_API_KEY,
-            // link: `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${this.state.myAPIKey}`,
-            // // mapIsReadyCallback: this.mapIsReadyCallback.bind(this),
-            // [markers, setMarkers]  useState([]);
             espCoor: { lat: 10.8220589, lng: 106.6867365 },
             count: 0,
+            radius: '',
         }
         this.listenToEmitter();
 
@@ -34,9 +30,9 @@ class MyMap extends Component {
 
     listenToEmitter() {
         emitter.on('RECEIVE_FROM_ESP', data => {
-            const { value1, value2 } = data.data.data.users;
+            const { latitude, longitude } = data.data.data.users;
             this.setState(({
-                espCoor: { lat: value1, lng: value2 },
+                espCoor: { lat: latitude, lng: longitude },
             }));
         });
         emitter.on('NUMBER_POINT_IN_MAP', countAddCoor => {
@@ -45,18 +41,14 @@ class MyMap extends Component {
             }));
             // console.log('map', countAddCoor)
         });
+
     }
 
-    // mapIsReadyCallback(map) {
-    //     console.log(map);
-    // }
-    // const[markers, setMarkers]  useState([]);
+    handleMapReady(map) {
+        // console.log('Map is fully loaded!', map);
+        emitter.emit('CREATE_COMPLETE');
+    }
 
-
-    // handleMapClick = (event) => {
-    //     const { lat, lng } = event.latlng;
-    //     setMarkers((markers) => [...markers, { lat, lng }]);
-    // };
 
     render() {
         return (
@@ -69,6 +61,7 @@ class MyMap extends Component {
                         height: '92vh'
                     }}
                     zoomControl={false} // disable default zoom control
+                    whenReady={this.handleMapReady}
 
                 >
                     <TileLayer
@@ -80,6 +73,7 @@ class MyMap extends Component {
                     <ZoomControl position="topright" />
                     <LocationMarker
                         count={this.state.count}
+                    // radius={this.state.radius}
                     />
                     <DisplayMarker
                         espCoor={this.state.espCoor} />
@@ -136,8 +130,6 @@ function LocationMarker(props) {
     const [positions, setPositions] = useState([]);
     const { count } = props;
 
-
-
     // Define custom icon
     const myIcon = new icon({
         iconUrl:
@@ -162,9 +154,10 @@ function LocationMarker(props) {
                 setPositions([...positions, newPosition]);
                 // map.flyTo(newPosition, map.getZoom());
                 // console.log(newPosition)
-                emitter.emit('EVENT_POINT_IN_MAP', { newPosition });
+                emitter.emit('EVENT_POINT_IN_MAP', newPosition);
             }
         },
+
     });
 
     useEffect(() => {
@@ -179,6 +172,30 @@ function LocationMarker(props) {
             emitter.off('DELETE_EVENT_IN_HOME', deleteEventListener);
         };
     }, [positions]);
+
+    useEffect(() => {
+        const checkListEventListener = (checkList) => {
+            if (checkList !== 0) {
+                let newPosition = checkList.map((point) => ({ lat: point.latitude, lng: point.longitude }))
+                let cor = newPosition
+                console.log('a', cor[0]);
+                try {
+                    setPositions(checkList.map((point) => ({ lat: point.latitude, lng: point.longitude })));
+                    for (let i = 0; i < cor.length; i++) {
+                        emitter.emit('EVENT_POINT_IN_MAP', cor[i]);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+        }
+
+        emitter.on('CHECK_EXIST', checkListEventListener);
+
+        return () => {
+            emitter.off('CHECK_EXIST', checkListEventListener);
+        };
+    }, []);
 
     return (
         <>
@@ -197,7 +214,7 @@ function LocationMarker(props) {
                             <button onClick={() => removeMarker(position)}>Remove this point</button> */}
                         </Popup>
                         {/* Add a circle around the marker  unit meter */}
-                        <Circle center={position} radius={5} />
+                        {/* <Circle center={position} radius={radius} /> */}
                     </Marker>
                 )
             })}
@@ -240,92 +257,4 @@ function DisplayMarker(props) {
 }
 
 
-// function MyMapComponent() {
-//     return (
-//         <MapContainer center={[10.8220589, 106.6867365]} zoom={13}>
-//             <MapConsumer>
-//                 {(map) => {
-//                     console.log('map center:', map.getCenter())
-//                     return null
-//                 }}
-//             </MapConsumer>
-//         </MapContainer>
-//     )
-// }
-
-// const mapStateToProps = state => {
-//     return {
-//         isLoggedIn: state.user.isLoggedIn
-//     };
-// };
-
-// const mapDispatchToProps = dispatch => {
-//     return {
-//     };
-// };
-
 export default connect()(MyMap);
-
-
-
-
-// // export default function MyMap() {
-// //     return (
-// //         <div>
-// //             <div>
-//                 // <MapContainer
-//                 //     center={center}
-//                 //     zoom={20}
-//                 //     style={{ width: '100vw', height: '100vh' }}
-//                 // >
-//                 //     <TileLayer
-//                 //         url="https://maps.geoapify.com/v1/tile/carto/{z}/{x}/{y}.png?&apiKey=198dcfa357864483bbc15b7aea665cfb"
-//                 //         attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" rel="nofollow" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" rel="nofollow" target="_blank">© OpenStreetMap</a> contributors'
-//                 //     />
-//                 // </MapContainer>
-// //             </div>
-
-// //         </div>
-
-// //     );
-// // }
-
-
-
-
-
-
-
-
-// import './MyMap.scss';
-
-// import React, { useState } from 'react';
-// import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
-
-// function MyMap() {
-//     const [markers, setMarkers] = useState([]);
-
-//     const handleMapClick = (event) => {
-//         const { lat, lng } = event.latlng;
-//         setMarkers((markers) => [...markers, { lat, lng }]);
-//     };
-
-//     return (
-//         <MapContainer center={[10.8220589, 106.6867365]}
-//             zoom={20}
-//             style={{ width: '100vw', height: '90vh' }}
-//             onClick={handleMapClick}>
-//             <TileLayer
-//                 url="https://maps.geoapify.com/v1/tile/carto/{z}/{x}/{y}.png?&apiKey=198dcfa357864483bbc15b7aea665cfb"
-//                 attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" rel="nofollow" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" rel="nofollow" target="_blank">© OpenStreetMap</a> contributors' />
-//             {markers.map((marker, index) => (
-//                 <Marker key={index} position={[marker.lat, marker.lng]} />
-//             ))}
-//             {markers.length > 1 && (
-//                 <Polyline positions={markers.map((marker) => [marker.lat, marker.lng])} />
-//             )}
-//         </MapContainer>
-//     );
-// }
-
-// export default MyMap;
