@@ -22,7 +22,7 @@ class HomeHeader extends Component {
             coordinates: [],
             displayedCoordinates: [],
             radius: 0,
-            stt: 0,
+            stt: false,
             round: 0,
             exist: false,
         }
@@ -37,7 +37,8 @@ class HomeHeader extends Component {
                 coorList: [...prevState.coorList, newPosition],
                 displayedCoordinates: [...prevState.displayedCoordinates, newPosition],
             }));
-            console.log(this.state.coorList)
+            // console.log(this.state.coorList)
+            // console.log(this.state.displayedCoordinates)
         });
         emitter.on('DELETE_EVENT_IN_MAP', position => {
             this.setState(prevState => ({
@@ -47,14 +48,25 @@ class HomeHeader extends Component {
         emitter.on('CHECK_EXIST', data => {
             if (data === 0) {
                 this.setState({
-                    exist: true
+                    exist: true,
+                    countAddCoor: 0,
+                    coordinates: [],
+                    displayedCoordinates: [],
+                    coor: { lat: 0, lng: 0 },
+                    coorList: [],
                 })
+                emitter.emit('NUMBER_POINT_IN_MAP', this.state.countAddCoor);
                 // console.log('data', this.state.countAddCoor)
-                // for (let i = 0; i < this.state.coordinates.length; i++) {
-                //     this.delCoorBut(i)
-                // }
-                // window.location.reload()
             } else {
+                this.setState({
+                    countAddCoor: 0,
+                    coordinates: [],
+                    displayedCoordinates: [],
+                    coor: { lat: 0, lng: 0 },
+                    coorList: [],
+                    stt: data[0].start,
+
+                })
                 let i = 0;
                 for (i; i < data.length; i++) {
                     this.setState({
@@ -65,13 +77,17 @@ class HomeHeader extends Component {
                     emitter.emit('NUMBER_POINT_IN_MAP', this.state.countAddCoor);
 
                 }
-                const checkbox = document.querySelector('.form-check-input');
-                if (checkbox && this.state.exist === false) {
-                    checkbox.checked = data[0].round;
-                    checkbox.disabled = true
-                }
-                // console.log('false', data[0].round)
-                // window.location.reload()
+
+
+            }
+            // console.log('false', data[0].start)
+            // console.log('false1', this.state.stt)
+            const checkbox = document.querySelector('.form-check-input');
+            if (checkbox && this.state.exist === false) {
+                checkbox.checked = data[0].round;
+                checkbox.disabled = true
+            } else {
+                checkbox.disabled = false
             }
         });
     }
@@ -80,7 +96,7 @@ class HomeHeader extends Component {
         this.setState({
             dropdown: !this.state.dropdown,
         })
-        console.log('event in header:', this.state.dropdown)
+        // console.log('event in header:', this.state.dropdown)
     }
 
     handleMenuBar = () => {
@@ -127,7 +143,7 @@ class HomeHeader extends Component {
                     countAddCoor: ++this.state.countAddCoor,
                     coordinates: [...this.state.coordinates, `Coordinate ${this.state.countAddCoor}`] // Add a new coordinate to the array
                 })
-                console.log("New coordinates:", this.state.countAddCoor);
+                // console.log("New coordinates:", this.state.countAddCoor);
                 emitter.emit('NUMBER_POINT_IN_MAP', this.state.countAddCoor);
             }
         } else {
@@ -168,30 +184,63 @@ class HomeHeader extends Component {
             await this.setState({
                 stt: '1'
             })
+            // console.log(this.state.displayedCoordinates.length)
+            if (this.state.displayedCoordinates.length) {
+                try {
+                    for (let i = 0; i < this.state.displayedCoordinates.length; i++) {
+                        let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round);
+                    };
+
+                } catch (error) {
+                    console.log(error)
+                }
+            } else {
+                alert('Please input coordinates before start')
+            }
+        } else {
+            await this.setState({
+                stt: '1'
+            })
             try {
-                for (let i = 0; i < this.state.displayedCoordinates.length; i++) {
-                    let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round);
-                };
+                await changeStatus(this.state.stt);
 
             } catch (error) {
                 console.log(error)
             }
-        } else {
-            alert('The USV is running but editing function is under development. So if the USV has a problem please press the stop button and call a technician')
+            // console.log(this.state.stt);
+            // console.log(this.state.exist)
         }
 
     }
 
-    handleStopUsv = async () => {
-        await this.setState({
-            stt: '0'
-        })
-        try {
-            await changeStatus(this.state.stt);
+    handleEditUsv = async () => {
+        if (this.state.exist === false) {
+            alert('The USV is running but editing function is under development. So if the USV has a problem please press the stop button and call a technician')
 
-        } catch (error) {
-            console.log(error)
         }
+    }
+
+    handleStopUsv = async () => {
+        if (this.state.stt === 1) {
+            await this.setState({
+                stt: '0'
+            }, async () => {
+
+                try {
+                    await changeStatus(this.state.stt);
+
+                } catch (error) {
+                    console.log(error)
+                }
+                // console.log(this.state.stt);
+                // console.log(this.state.exist)
+            });
+        } else {
+            alert('USV is stopping now')
+        }
+
+        // console.log(this.state.stt)
+
     }
 
     handleAround = (event) => {
@@ -386,10 +435,12 @@ class HomeHeader extends Component {
                                             <label className="form-check-label">go around</label>
                                         </div>
                                         <button type="button"
-                                            className={this.state.exist ? "btn btn-outline-primary startbut " : 'btn btn-outline-primary startbut'}
-                                            onClick={(event) => { this.handleStartUsv(event) }}
+                                            className="btn btn-outline-primary startbut"
+                                            onClick={(event) => {
+                                                this.state.exist ? this.handleStartUsv(event) : (this.state.stt ? this.handleEditUsv(event) : this.handleStartUsv(event))
+                                            }}
                                         >
-                                            {this.state.exist ? "Start" : 'Edit'}
+                                            {this.state.exist ? "Start" : (this.state.stt ? "Edit" : "Start")}
                                         </button>
                                         <button type="button" className="btn btn-outline-danger stopbut"
                                             onClick={(event) => { this.handleStopUsv(event) }}>

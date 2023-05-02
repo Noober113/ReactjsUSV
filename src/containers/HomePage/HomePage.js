@@ -4,8 +4,6 @@ import HomeHeader from './HomeHeader';
 import './HomePage.scss';
 import MyMap from './Map/MyMap';
 import { Map, TileLayer, MapContainer, Marker, Popup } from 'react-leaflet';
-// import event from './Map/event'
-// import MapWithMarkers from './Map/event';
 import { emitter } from '../../utils/emitter';
 import { getAllCoor, getExist } from '../../services/userService';
 
@@ -30,14 +28,14 @@ class HomePage extends Component {
 
     listenToEmitter() {
         emitter.on('CREATE_COMPLETE', async () => {
-            console.log('create complete');
+            // console.log('create complete');
             this.setState({
                 checkCreate: true
             });
             try {
                 let prevCheck = await getExist();
                 emitter.emit('CHECK_EXIST', prevCheck);
-                console.log('pre', prevCheck);
+                // console.log('pre', prevCheck);
                 setInterval(async () => {
                     let data = await getAllCoor();
                     // console.log('lat:', data.data.users.value1, 'lng', data.data.users.value2)
@@ -47,7 +45,7 @@ class HomePage extends Component {
                     let currentCheck = await getExist();
                     // console.log('currentCheck:', JSON.stringify(currentCheck), 'prevCheck:', JSON.stringify(prevCheck));
                     if (JSON.stringify(currentCheck) !== JSON.stringify(prevCheck)) {
-                        console.log('cur', currentCheck);
+                        // console.log('cur', currentCheck);
                         emitter.emit('CHECK_EXIST', currentCheck);
                         prevCheck = currentCheck;
                     }

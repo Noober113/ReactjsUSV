@@ -163,6 +163,8 @@ function LocationMarker(props) {
     useEffect(() => {
         const deleteEventListener = (data) => {
             const position = data.position;
+            // console.log(position)
+
             removeMarker(position);
         };
 
@@ -178,7 +180,7 @@ function LocationMarker(props) {
             if (checkList !== 0) {
                 let newPosition = checkList.map((point) => ({ lat: point.latitude, lng: point.longitude }))
                 let cor = newPosition
-                console.log('a', cor[0]);
+                // console.log('a', cor[0]);
                 try {
                     setPositions(checkList.map((point) => ({ lat: point.latitude, lng: point.longitude })));
                     for (let i = 0; i < cor.length; i++) {
@@ -187,7 +189,9 @@ function LocationMarker(props) {
                 } catch (error) {
                     console.error(error);
                 }
-            };
+            } else {
+                setPositions([]);
+            }
         }
 
         emitter.on('CHECK_EXIST', checkListEventListener);
