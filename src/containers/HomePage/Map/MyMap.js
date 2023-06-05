@@ -1,13 +1,13 @@
 import React, { Component, useState, useEffect } from 'react';
 import { Map, TileLayer, MapContainer, Marker, Popup, useMapEvents, useMap, MapConsumer, Polyline, Circle, ZoomControl } from 'react-leaflet';
-// import './MyMap.scss';
+import './MyMap.scss';
 import 'leaflet/dist/leaflet.css';
 import { connect } from 'react-redux';
 import 'leaflet-deepzoom';
 import { L, map, icon } from 'leaflet';
 import { emitter } from '../../../utils/emitter';
 import { LeafletTrackingMarker } from 'react-leaflet-tracking-marker';
-import airplane from '../../../assets/images/boat.png';
+import airplane from '../../../assets/images/boat.svg';
 
 
 
@@ -58,7 +58,7 @@ class MyMap extends Component {
                     zoom={18}
                     style={{
                         width: '100vw',
-                        height: '92vh'
+                        height: '90vh'
                     }}
                     zoomControl={false} // disable default zoom control
                     whenReady={this.handleMapReady}
@@ -77,6 +77,11 @@ class MyMap extends Component {
                     />
                     <DisplayMarker
                         espCoor={this.state.espCoor} />
+                    <div className='but-target'>
+                        <button type="button" class="btn btn-light">
+                            <i className="fas fa-crosshairs"></i>
+                        </button>
+                    </div>
                 </MapContainer>
 
             </div>
@@ -153,7 +158,7 @@ function LocationMarker(props) {
             if (positions.length < count) { // Add a check to make sure the array does not exceed 15 items
                 setPositions([...positions, newPosition]);
                 // map.flyTo(newPosition, map.getZoom());
-                // console.log(newPosition)
+                console.log(newPosition.lat, newPosition.lng);
                 emitter.emit('EVENT_POINT_IN_MAP', newPosition);
             }
         },
@@ -163,7 +168,7 @@ function LocationMarker(props) {
     useEffect(() => {
         const deleteEventListener = (data) => {
             const position = data.position;
-            // console.log(position)
+            console.log(position)
 
             removeMarker(position);
         };
@@ -180,7 +185,8 @@ function LocationMarker(props) {
             if (checkList !== 0) {
                 let newPosition = checkList.map((point) => ({ lat: point.latitude, lng: point.longitude }))
                 let cor = newPosition
-                // console.log('a', cor[0]);
+                // const latLngObj = L.latLng(newPosition.lat, newPosition.lng);
+                // console.log('a', latLngObj);
                 try {
                     setPositions(checkList.map((point) => ({ lat: point.latitude, lng: point.longitude })));
                     for (let i = 0; i < cor.length; i++) {
@@ -234,7 +240,7 @@ function DisplayMarker(props) {
 
 
     const myIcon = new icon({
-        iconSize: [45, 45],
+        iconSize: [90, 90],
         popupAnchor: [2, -20],
         iconUrl: airplane
     });
@@ -243,7 +249,12 @@ function DisplayMarker(props) {
     const [prevPos, setPrevPos] = useState([lat, lng]);
 
     useEffect(() => {
-        if (prevPos[1] !== lng && prevPos[0] !== lat) setPrevPos([lat, lng]);
+        if (prevPos[1] !== lng && prevPos[0] !== lat) {
+            setPrevPos([lat, lng]);
+            // map.flyTo(prevPos, map.getZoom());
+
+        }
+        // setPrevPos([lat, lng]);
     }, [lat, lng, prevPos]);
 
     return (

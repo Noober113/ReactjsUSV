@@ -1,4 +1,17 @@
-.map-container {
-  height: 90vh;
-  width : 100vw;
+.but-target {
+  z-index      : 490;
+  position     : relative;
+  display      : flex;
+  padding-right: 0px;
+  margin-block : 80px;
+  margin-left  : 95%;
+
+  .btn {
+    width: 30px;
+
+    .i {
+      font-size: 25px;
+      display  : block;
+    }
+  }
 }
