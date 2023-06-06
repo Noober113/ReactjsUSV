@@ -25,6 +25,8 @@ class HomeHeader extends Component {
             stt: false,
             round: 0,
             exist: false,
+            Analysis: false,
+            vl: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         }
         this.listenToEmitter();
     }
@@ -90,6 +92,12 @@ class HomeHeader extends Component {
                 checkbox.disabled = false
             }
         });
+        emitter.on('RECEIVE_FROM_ESP', data => {
+            const { speed, course, distance, status, status_rubbish } = data.data.data.users;
+            this.setState({
+                vl: { 1: speed, 2: course, 3: distance, 4: status, 5: status_rubbish },
+            })
+        });
     }
 
     handleUserDropDown = () => {
@@ -118,7 +126,14 @@ class HomeHeader extends Component {
     handleCloseSetting = () => {
         this.setState({
             setting: !this.state.setting,
-            menuBar: !this.state.menuBar
+            menuBar: !this.state.menuBar,
+        })
+    }
+
+    handleCloseAnalysis = () => {
+        this.setState({
+            menuBar: !this.state.menuBar,
+            Analysis: !this.state.Analysis,
         })
     }
 
@@ -249,6 +264,14 @@ class HomeHeader extends Component {
         })
     }
 
+    handleAnalysis = () => {
+        this.setState({
+            Analysis: !this.state.Analysis,
+            menuBar: !this.state.menuBar,
+        })
+        // console.log(this.state.setting)
+
+    }
     // handleOnChangeRadius = (event) => {
     //     let value = event.target.value;
 
@@ -317,7 +340,7 @@ class HomeHeader extends Component {
                                                 </li>
                                                 <li>
                                                     <a className="vlink rounded"
-                                                        href="#">
+                                                        onClick={() => { this.handleAnalysis() }}>
                                                         <i className="fas fa-chart-line"></i>
                                                         <span>Analysis</span></a>
                                                 </li>
@@ -449,7 +472,56 @@ class HomeHeader extends Component {
                                     </div>
                                 </div>
                             </div>
+                            {/* Analysis panel */}
+                            <div className={this.state.Analysis ? "visible left-panel" : 'invisible left-panel'}>
+                                <div className="card-body">
+                                    <h5 className="card-title">
+                                        Analysis
+                                        <i className="fas fa-arrow-left"
+                                            style={{
+                                                float: 'right',
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() => { this.handleCloseAnalysis() }}
+                                        ></i>
+                                        <form>
+                                            <div class="form-group row">
+                                                <label className="col-sm-2 col-form-label">1</label>
+                                                <div className="col-sm-10">
+                                                    <input className="form-control" placeholder="1" value={this.state.vl[1] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className="form-group row">
+                                                <label className="col-sm-2 col-form-label">2</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" placeholder="2" value={this.state.vl[3] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className="form-group row">
+                                                <label className="col-sm-2 col-form-label">3</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" placeholder="3" value={this.state.vl[4] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className="form-group row">
+                                                <label className="col-sm-2 col-form-label">4</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" placeholder="4" value={this.state.vl[5] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className="form-group row">
+                                                <label className="col-sm-2 col-form-label">cap180</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" placeholder="cap180" value={this.state.vl[2] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </h5>
+                                </div>
+                            </div>
                         </div>
+
+
                     </div>
                 </div>
 

@@ -7,7 +7,7 @@ import 'leaflet-deepzoom';
 import { L, map, icon } from 'leaflet';
 import { emitter } from '../../../utils/emitter';
 import { LeafletTrackingMarker } from 'react-leaflet-tracking-marker';
-import airplane from '../../../assets/images/boat.svg';
+import airplane from '../../../assets/images/boat.png';
 
 
 
@@ -264,6 +264,7 @@ function DisplayMarker(props) {
                 position={[lat, lng]}
                 previousPosition={prevPos}
                 duration={1000}
+            // rotationAngle={360}
             >
                 <Popup>{"Hello, there! 🐱‍🏍 "}</Popup>
             </LeafletTrackingMarker>
