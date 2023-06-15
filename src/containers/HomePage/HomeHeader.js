@@ -1,11 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, useState } from 'react';
 import { connect } from 'react-redux';
 import { formatDiagnosticsWithColorAndContext } from 'typescript';
 import './HomeHeader.scss';
 import { emitter } from '../../utils/emitter';
-import { createCoor, changeStatus } from '../../services/userService';
+import { createCoor, changeStatus, changeSpeed } from '../../services/userService';
 import { round } from 'lodash';
-
+import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css';
+import RangeSlider from 'react-bootstrap-range-slider';
 
 
 class HomeHeader extends Component {
@@ -26,9 +27,11 @@ class HomeHeader extends Component {
             round: 0,
             exist: false,
             Analysis: false,
-            vl: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            vl: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0 },
+            speed: 0
         }
         this.listenToEmitter();
+
     }
 
     listenToEmitter() {
@@ -93,9 +96,10 @@ class HomeHeader extends Component {
             }
         });
         emitter.on('RECEIVE_FROM_ESP', data => {
-            const { speed, course, distance, status, status_rubbish } = data.data.data.users;
+            // console.log(data)
+            const { value_1, value_2, value_3, value_4, course, distance, speed, value_5 } = data.data.data.users;
             this.setState({
-                vl: { 1: speed, 2: course, 3: distance, 4: status, 5: status_rubbish },
+                vl: { 1: value_1, 2: value_2, 3: value_3, 4: value_4, 5: value_5, 6: course, 7: distance, 8: speed },
             })
         });
     }
@@ -196,6 +200,7 @@ class HomeHeader extends Component {
 
     handleStartUsv = async () => {
         if (this.state.exist === true) {
+            emitter.emit('SENDING_DATA',);
             await this.setState({
                 stt: '1'
             })
@@ -205,7 +210,7 @@ class HomeHeader extends Component {
                     for (let i = 0; i < this.state.displayedCoordinates.length; i++) {
                         let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round);
                     };
-
+                    emitter.emit('SENT_DATA',);
                 } catch (error) {
                     console.log(error)
                 }
@@ -270,6 +275,13 @@ class HomeHeader extends Component {
             menuBar: !this.state.menuBar,
         })
         // console.log(this.state.setting)
+
+    }
+
+    handleSpeed = (e) => {
+        this.setState({
+            speed: e.target.value
+        })
 
     }
     // handleOnChangeRadius = (event) => {
@@ -457,6 +469,19 @@ class HomeHeader extends Component {
                                             <input type="checkbox" className="form-check-input " />
                                             <label className="form-check-label">go around</label>
                                         </div>
+                                        {/* <div>
+                                            Speed control
+                                            <RangeSlider
+                                                value={this.state.speed}
+                                                onChange={(e) => {
+                                                    this.handleSpeed(e.target.value)
+                                                }}
+                                                step={1}
+                                                min={13}
+                                                max={20}
+                                            />
+                                        </div>   */}
+                                        {/* <Step /> */}
                                         <button type="button"
                                             className="btn btn-outline-primary startbut"
                                             onClick={(event) => {
@@ -474,7 +499,7 @@ class HomeHeader extends Component {
                             </div>
                             {/* Analysis panel */}
                             <div className={this.state.Analysis ? "visible left-panel" : 'invisible left-panel'}>
-                                <div className="card-body">
+                                <div className="card-body accordion-body" style={{ height: "416px" }}>
                                     <h5 className="card-title">
                                         Analysis
                                         <i className="fas fa-arrow-left"
@@ -486,33 +511,51 @@ class HomeHeader extends Component {
                                         ></i>
                                         <form>
                                             <div class="form-group row">
-                                                <label className="col-sm-2 col-form-label">1</label>
+                                                <label className="col-sm-2 col-form-label">cb1</label>
                                                 <div className="col-sm-10">
                                                     <input className="form-control" placeholder="1" value={this.state.vl[1] || ""} readOnly />
                                                 </div>
                                             </div>
                                             <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">2</label>
+                                                <label className="col-sm-2 col-form-label">cb2</label>
                                                 <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="2" value={this.state.vl[3] || ""} readOnly />
+                                                    <input type="text" className="form-control" placeholder="2" value={this.state.vl[2] || ""} readOnly />
                                                 </div>
                                             </div>
                                             <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">3</label>
+                                                <label className="col-sm-2 col-form-label">cb3</label>
                                                 <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="3" value={this.state.vl[4] || ""} readOnly />
+                                                    <input type="text" className="form-control" placeholder="3" value={this.state.vl[3] || ""} readOnly />
                                                 </div>
                                             </div>
                                             <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">4</label>
+                                                <label className="col-sm-2 col-form-label">cb4</label>
                                                 <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="4" value={this.state.vl[5] || ""} readOnly />
+                                                    <input type="text" className="form-control" placeholder="4" value={this.state.vl[4] || ""} readOnly />
                                                 </div>
                                             </div>
                                             <div className="form-group row">
                                                 <label className="col-sm-2 col-form-label">cap180</label>
                                                 <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="cap180" value={this.state.vl[2] || ""} readOnly />
+                                                    <input type="text" className="form-control" placeholder="cap180" value={this.state.vl[6] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className="form-group row">
+                                                <label className="col-sm-2 col-form-label">distance</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" placeholder="distance" value={this.state.vl[7] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className="form-group row">
+                                                <label className="col-sm-2 col-form-label">speed</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" placeholder="speed" value={this.state.vl[8] || ""} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className="form-group row">
+                                                <label className="col-sm-2 col-form-label">j</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" placeholder="j" value={this.state.vl[5] || ""} readOnly />
                                                 </div>
                                             </div>
                                         </form>
@@ -533,6 +576,38 @@ class HomeHeader extends Component {
     }
 
 }
+
+// const Step = () => {
+
+//     const [value, setValue] = React.useState(0);
+//     emitter.on('CHECK_EXIST', () => {
+//         setInterval(async () => {
+//             try {
+//                 await changeSpeed(value);
+
+//             } catch (error) {
+//                 console.log(error)
+//             }
+//         }, 200)
+
+//     })
+
+
+//     return (
+//         <div>
+//             Speed control
+//             <RangeSlider
+//                 value={value}
+//                 onChange={e => setValue(e.target.value)}
+//                 step={1}
+//                 min={13}
+//                 max={20}
+//             />
+//         </div>
+
+//     );
+
+// };
 
 const mapStateToProps = state => {
     return {

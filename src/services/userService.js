@@ -39,4 +39,8 @@ const getExist = async () => {
     // return axios.get(`/api/query-setting`);
 }
 
-export { handleLogin, getAllUser, createNewUserService, deleteUserService, createCoor, getAllCoor, changeStatus, getExist }
+const changeSpeed = (value) => {
+    return axios.put(`${url}/api/edit-speed`, { value });
+}
+
+export { handleLogin, getAllUser, createNewUserService, deleteUserService, createCoor, getAllCoor, changeStatus, getExist, changeSpeed }

@@ -158,7 +158,7 @@ function LocationMarker(props) {
             if (positions.length < count) { // Add a check to make sure the array does not exceed 15 items
                 setPositions([...positions, newPosition]);
                 // map.flyTo(newPosition, map.getZoom());
-                console.log(newPosition.lat, newPosition.lng);
+                // console.log(newPosition.lat, newPosition.lng);
                 emitter.emit('EVENT_POINT_IN_MAP', newPosition);
             }
         },
@@ -266,7 +266,11 @@ function DisplayMarker(props) {
                 duration={1000}
             // rotationAngle={360}
             >
-                <Popup>{"Hello, there! 🐱‍🏍 "}</Popup>
+                <Popup>
+                    {"Hello, there! 🐱‍🏍 "}
+                    <br />
+                    Latitude : {lat}, Longtude:{lng}
+                </Popup>
             </LeafletTrackingMarker>
         </>
     );

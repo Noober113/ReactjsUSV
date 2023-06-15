@@ -18,6 +18,7 @@ class HomePage extends Component {
             isStart: false,
             coorFromEsp: [],
             checkCreate: false,
+            send: true,
         }
         this.listenToEmitter = this.listenToEmitter.bind(this);
     }
@@ -27,6 +28,16 @@ class HomePage extends Component {
     }
 
     listenToEmitter() {
+        emitter.on('SENDING_DATA', () => {
+            this.setState({
+                send: !this.state.send
+            })
+        });
+        emitter.on('SENT_DATA', () => {
+            this.setState({
+                send: !this.state.send
+            })
+        });
         emitter.on('CREATE_COMPLETE', async () => {
             // console.log('create complete');
             this.setState({
@@ -36,20 +47,25 @@ class HomePage extends Component {
                 let prevCheck = await getExist();
                 emitter.emit('CHECK_EXIST', prevCheck);
                 // console.log('pre', prevCheck);
+
                 setInterval(async () => {
                     let data = await getAllCoor();
                     // console.log('lat:', data.data.users.value1, 'lng', data.data.users.value2)
                     if (data.data.users) {
                         emitter.emit('RECEIVE_FROM_ESP', { data });
                     }
-                    let currentCheck = await getExist();
-                    // console.log('currentCheck:', JSON.stringify(currentCheck), 'prevCheck:', JSON.stringify(prevCheck));
-                    if (JSON.stringify(currentCheck) !== JSON.stringify(prevCheck)) {
-                        // console.log('cur', currentCheck);
-                        emitter.emit('CHECK_EXIST', currentCheck);
-                        prevCheck = currentCheck;
+                    if (this.state.send == true) {
+                        let currentCheck = await getExist();
+                        // console.log('currentCheck:', JSON.stringify(currentCheck), 'prevCheck:', JSON.stringify(prevCheck));
+                        if (JSON.stringify(currentCheck) !== JSON.stringify(prevCheck)) {
+                            // console.log('cur', currentCheck);
+                            emitter.emit('CHECK_EXIST', currentCheck);
+                            prevCheck = currentCheck;
+                        }
                     }
+
                 }, 200);
+
             } catch (e) {
                 console.log(e);
             }
