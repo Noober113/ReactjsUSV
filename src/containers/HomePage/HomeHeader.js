@@ -510,7 +510,7 @@ class HomeHeader extends Component {
                                             onClick={() => { this.handleCloseAnalysis() }}
                                         ></i>
                                         <form>
-                                            <div class="form-group row">
+                                            <div className="form-group row">
                                                 <label className="col-sm-2 col-form-label">cb1</label>
                                                 <div className="col-sm-10">
                                                     <input className="form-control" placeholder="1" value={this.state.vl[1] || ""} readOnly />
