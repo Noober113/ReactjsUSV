@@ -1,12 +1,27 @@
-import React, { Component, useState } from 'react';
+import React, { Component, useState, ChangeEventHandler, useRef, } from 'react';
 import { connect } from 'react-redux';
 import { formatDiagnosticsWithColorAndContext } from 'typescript';
 import './HomeHeader.scss';
 import { emitter } from '../../utils/emitter';
-import { createCoor, changeStatus, changeSpeed } from '../../services/userService';
+import { createCoor, changeStatus, changeSpeed, changeRound } from '../../services/userService';
 import { round } from 'lodash';
 import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css';
 import RangeSlider from 'react-bootstrap-range-slider';
+import { format, isValid, parse } from 'date-fns';
+import FocusTrap from 'focus-trap-react';
+import { DayPicker } from 'react-day-picker';
+import { usePopper } from 'react-popper';
+import 'bootstrap/dist/js/bootstrap.bundle';
+import Example from './pickUpDate';
+import 'react-day-picker/dist/style.css';
+import { LineChart } from '@mui/x-charts/LineChart';
+import ReactSpeedometer from "react-d3-speedometer"
+// import MiMap from './Map/MiMap';
+import { distanceSegment } from 'leaflet-geometryutil';
+import { point } from 'leaflet';
+// import { getDistanceFromLine } from 'geolib';
+import DashBoard from './DashBoard';
+
 
 
 class HomeHeader extends Component {
@@ -24,13 +39,17 @@ class HomeHeader extends Component {
             displayedCoordinates: [],
             radius: 0,
             stt: false,
-            round: 0,
+            round: false,
             exist: false,
             Analysis: false,
-            vl: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0 },
-            speed: 0
+            vl: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 },
+            speed: 0,
+            distance: [],
+            boat: { lat: 0, lng: 0 },
+            display: false,
         }
         this.listenToEmitter();
+        // this.calculateDistance = this.calculateDistance.bind(this);
 
     }
 
@@ -70,7 +89,7 @@ class HomeHeader extends Component {
                     coor: { lat: 0, lng: 0 },
                     coorList: [],
                     stt: data[0].start,
-
+                    round: data[0].round,
                 })
                 let i = 0;
                 for (i; i < data.length; i++) {
@@ -83,24 +102,45 @@ class HomeHeader extends Component {
 
                 }
 
+                // setInterval(() => {
 
+                //     let line = this.state.displayedCoordinates
+                //     let point = this.state.boat
+                //     // let dt = getDistanceFromLine(point, line1, line2, 0.000000000000000000000000000000000000000000001)
+                //     // this.setState({
+                //     //     distance: dt
+                //     // })
+                //     const dts = lines.map(line => geolib.getDistance(point, line));
+                //     const minDt = Math.min(...dts);
+
+                // }, 1000)
             }
             // console.log('false', data[0].start)
             // console.log('false1', this.state.stt)
             const checkbox = document.querySelector('.form-check-input');
             if (checkbox && this.state.exist === false) {
                 checkbox.checked = data[0].round;
-                checkbox.disabled = true
-            } else {
-                checkbox.disabled = false
+                // checkbox.disabled = true
             }
+            // else {
+            //     checkbox.disabled = false
+            // }
         });
         emitter.on('RECEIVE_FROM_ESP', data => {
             // console.log(data)
-            const { value_1, value_2, value_3, value_4, course, distance, speed, value_5 } = data.data.data.users;
+            const { value_1, value_2, value_3, value_4, course, distance, speed, value_5, value_6 } = data.data.data.users;
             this.setState({
-                vl: { 1: value_1, 2: value_2, 3: value_3, 4: value_4, 5: value_5, 6: course, 7: distance, 8: speed },
+                vl: { 1: value_1, 2: value_2, 3: value_3, 4: value_4, 5: value_5, 6: course, 7: distance, 8: speed, 9: value_6 },
             })
+        });
+
+        emitter.on('RECEIVE_FROM_ESP', data => {
+            const { latitude, longitude } = data.data.data.users;
+            this.setState(({
+                boat: { lat: latitude, lng: longitude },
+            }
+
+            ));
         });
     }
 
@@ -266,7 +306,24 @@ class HomeHeader extends Component {
     handleAround = (event) => {
         this.setState({
             round: !this.state.round
+        }, async () => {
+
+            try {
+                await changeRound(this.state.round);
+
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        )
+    }
+
+    handleTrackingOn = (event) => {
+        this.setState({
+            display: !this.state.display
         })
+        emitter.emit('STATUS_DISPLAY',);
     }
 
     handleAnalysis = () => {
@@ -302,6 +359,19 @@ class HomeHeader extends Component {
     //     }
     //     )
     // }
+
+
+    calculateDistance() {
+        const point = [0, 0];
+        const point1 = [1, 1];
+        const point2 = [2, 2];
+        const distance = distanceSegment(point, point1, point2);
+        this.setState({ distance }, () => {
+            console.log("distance", this.state.distance, "km");
+        }
+
+        );
+    }
 
     render() {
         const { countAddCoor, coordinates, displayedCoordinates } = this.state; // Destructure state variables for easier access in the render method
@@ -354,7 +424,7 @@ class HomeHeader extends Component {
                                                     <a className="vlink rounded"
                                                         onClick={() => { this.handleAnalysis() }}>
                                                         <i className="fas fa-chart-line"></i>
-                                                        <span>Analysis</span></a>
+                                                        <span>Dashboard</span></a>
                                                 </li>
                                                 <li>
                                                     <a className="vlink rounded"
@@ -464,10 +534,25 @@ class HomeHeader extends Component {
                                                 }}
                                                 onChange={(event) => this.handleOnChangeRadius(event)} />
                                         </div> */}
-                                        <div className="form-check"
+                                        {/* <div className="form-check"
                                             onChange={(event) => { this.handleAround(event) }}>
                                             <input type="checkbox" className="form-check-input " />
                                             <label className="form-check-label">go around</label>
+                                        </div> */}
+                                        <div className="form-check form-switch"
+                                            onChange={(event) => { this.handleAround(event) }}>
+                                            <input className="form-check-input 1" type="checkbox" role="switch" id="flexSwitchCheckDefault" />
+                                            <label className="form-check-label" for="flexSwitchCheckDefault">Nonstop</label>
+                                        </div>
+                                        {/* <div className="form-check form-switch"
+                                            onChange={(event) => { this.handleTrackingOn(event) }}
+                                        >
+                                            <input className="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked />
+                                            <label className="form-check-label" for="flexSwitchCheckDefault">Display tracking</label>
+                                        </div> */}
+                                        <div className="form-check form-switch" onChange={(event) => { this.handleTrackingOn(event) }}>
+                                            <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" />
+                                            <label class="form-check-label" for="flexSwitchCheckChecked">Display tracking</label>
                                         </div>
                                         {/* <div>
                                             Speed control
@@ -477,10 +562,10 @@ class HomeHeader extends Component {
                                                     this.handleSpeed(e.target.value)
                                                 }}
                                                 step={1}
-                                                min={13}
+                                                min={13}    
                                                 max={20}
                                             />
-                                        </div>   */}
+                                        </div> */}
                                         {/* <Step /> */}
                                         <button type="button"
                                             className="btn btn-outline-primary startbut"
@@ -498,10 +583,10 @@ class HomeHeader extends Component {
                                 </div>
                             </div>
                             {/* Analysis panel */}
-                            <div className={this.state.Analysis ? "visible left-panel" : 'invisible left-panel'}>
-                                <div className="card-body accordion-body" style={{ height: "416px" }}>
+                            <div className={this.state.Analysis ? "visible left-panel-dash" : 'invisible left-panel-dash'}>
+                                <div className="card-body accordion-body" >
                                     <h5 className="card-title">
-                                        Analysis
+                                        Dashboard
                                         <i className="fas fa-arrow-left"
                                             style={{
                                                 float: 'right',
@@ -509,56 +594,7 @@ class HomeHeader extends Component {
                                             }}
                                             onClick={() => { this.handleCloseAnalysis() }}
                                         ></i>
-                                        <form>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">cb1</label>
-                                                <div className="col-sm-10">
-                                                    <input className="form-control" placeholder="1" value={this.state.vl[1] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">cb2</label>
-                                                <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="2" value={this.state.vl[2] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">cb3</label>
-                                                <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="3" value={this.state.vl[3] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">cb4</label>
-                                                <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="4" value={this.state.vl[4] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">cap180</label>
-                                                <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="cap180" value={this.state.vl[6] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">distance</label>
-                                                <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="distance" value={this.state.vl[7] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">speed</label>
-                                                <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="speed" value={this.state.vl[8] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                            <div className="form-group row">
-                                                <label className="col-sm-2 col-form-label">j</label>
-                                                <div className="col-sm-10">
-                                                    <input type="text" className="form-control" placeholder="j" value={this.state.vl[5] || ""} readOnly />
-                                                </div>
-                                            </div>
-                                        </form>
+                                        <DashBoard />
                                     </h5>
                                 </div>
                             </div>
@@ -570,11 +606,33 @@ class HomeHeader extends Component {
 
                 {/*  Menu left bar */}
 
-
             </div>
         );
     }
 
+}
+
+function DatePickerDialog() {
+
+    const [days, setDays] = useState([])
+
+
+    return (
+        <>
+            <style
+            // {css}
+            />
+            <DayPicker
+                mode="multiple"
+                selected={days}
+                onSelect={setDays}
+                modifiersClassNames={{
+                    selected: 'my-selected',
+                    today: 'my-today'
+                }}
+            />
+        </>
+    );
 }
 
 // const Step = () => {
@@ -608,6 +666,7 @@ class HomeHeader extends Component {
 //     );
 
 // };
+
 
 const mapStateToProps = state => {
     return {

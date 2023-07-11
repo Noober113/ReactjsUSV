@@ -1,0 +1,80 @@
+.boz1 {
+    // border: solid red 1px;
+    display   : inline-block;
+    border    : solid red 1px;
+    height    : 40rem;
+    background: white;
+
+
+    .upperrow {
+        border : solid blue 1px;
+        height : 20rem;
+        width  : 100%;
+        display: flex;
+
+        .upper-left {
+            display       : flex;
+            border        : solid green 1px;
+            margin        : auto;
+            /* align-items: center; */
+            height        : 100%;
+            width         : 30%;
+        }
+
+        .upper-cen {
+            display    : flex;
+            border     : solid green 1px;
+            margin     : auto;
+            align-items: center;
+            width      : 30%;
+            height     : 100%;
+
+            .speed {
+                display        : flex;
+                margin         : auto;
+                align-items    : center;
+                justify-content: center;
+                align-self     : auto;
+                margin-top     : 5rem;
+            }
+        }
+
+        .upper-rih {
+            display: flex;
+            border : solid green 1px;
+            margin : auto;
+            width  : 30%;
+            height : 100%;
+
+            .recharts-default-legend {
+                background: none !important;
+                box-shadow: none !important;
+            }
+        }
+
+    }
+
+    .cha1 {
+        margin-top  : 0.5rem;
+        border      : solid red 1px;
+        height      : 19rem;
+        width       : 35rem;
+        display     : block;
+        margin-right: 0.5rem;
+
+        .char1 {
+            width      : 34rem;
+            height     : 19rem;
+            display    : flex;
+            margin-top : -30px;
+            align-items: center;
+        }
+
+        .speedometer {
+            width  : 24rem !important;
+            height : 17rem !important;
+            display: flex;
+            margin : 5rem;
+        }
+    }
+}

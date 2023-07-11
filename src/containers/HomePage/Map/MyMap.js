@@ -1,13 +1,16 @@
 import React, { Component, useState, useEffect } from 'react';
-import { Map, TileLayer, MapContainer, Marker, Popup, useMapEvents, useMap, MapConsumer, Polyline, Circle, ZoomControl } from 'react-leaflet';
+import { Map, TileLayer, MapContainer, Marker, Popup, useMapEvents, useMap, MapConsumer, Polyline, Circle, ZoomControl, flyTo } from 'react-leaflet';
 import './MyMap.scss';
 import 'leaflet/dist/leaflet.css';
 import { connect } from 'react-redux';
 import 'leaflet-deepzoom';
-import { L, map, icon } from 'leaflet';
+import { L, map, icon, distanceToLine, latLng, control, polyline } from 'leaflet';
 import { emitter } from '../../../utils/emitter';
 import { LeafletTrackingMarker } from 'react-leaflet-tracking-marker';
 import airplane from '../../../assets/images/boat.png';
+import { size } from 'lodash';
+import { distanceSegment } from 'leaflet-geometryutil';
+import { getDistanceFromLine } from 'geolib';
 
 
 
@@ -19,8 +22,12 @@ class MyMap extends Component {
             espCoor: { lat: 10.8220589, lng: 106.6867365 },
             count: 0,
             radius: '',
+            distance: null,
+            display: false,
         }
+        this.mapRef = React.createRef();
         this.listenToEmitter();
+        // this.handleClick = this.handleClick.bind(this);
 
     }
 
@@ -41,12 +48,31 @@ class MyMap extends Component {
             }));
             // console.log('map', countAddCoor)
         });
-
+        emitter.on('STATUS_DISPLAY', () => {
+            this.setState(({
+                display: !this.state.display,
+            }));
+        });
     }
 
     handleMapReady(map) {
         // console.log('Map is fully loaded!', map);
         emitter.emit('CREATE_COMPLETE');
+    }
+
+    caculateSth() {
+
+    }
+
+    // setInterval(this.handleClick, 500);
+
+
+
+
+    handleFly(Map) {
+        console.log('Map is fully loaded!', this.state.espCoor);
+
+        Map.flyTo(latLng(this.state.espCoor), 20)
     }
 
 
@@ -62,6 +88,10 @@ class MyMap extends Component {
                     }}
                     zoomControl={false} // disable default zoom control
                     whenReady={this.handleMapReady}
+                    whenCreated={(map) => {
+                        this.map = map;
+                    }}
+                    onClick={this.handleClick}
 
                 >
                     <TileLayer
@@ -75,13 +105,14 @@ class MyMap extends Component {
                         count={this.state.count}
                     // radius={this.state.radius}
                     />
+                    <Button
+                        espCoor={this.state.espCoor}
+                    />
                     <DisplayMarker
-                        espCoor={this.state.espCoor} />
-                    <div className='but-target'>
-                        <button type="button" class="btn btn-light">
-                            <i className="fas fa-crosshairs"></i>
-                        </button>
-                    </div>
+                        espCoor={this.state.espCoor}
+                        display={this.state.display}
+                    />
+
                 </MapContainer>
 
             </div>
@@ -122,13 +153,46 @@ class MyMap extends Component {
 // });
 
 
-// function MyComponent() {
-//     const map = useMap()
-//     console.log('map center:', map.getCenter())
-//     return null
-// }
+function Button(props) {
+    const { espCoor } = props;
 
-// user setting coordition
+    const map = useMapEvents({
+        click(e) {
+
+            map.flyTo(espCoor, map.getZoom(18));
+        },
+
+    });
+    return (
+        <>
+            <div className='leaflet-control-container'>
+                <div className='leaflet-top leaflet-right t-1 but-target'>
+                    <div className='leaflet-control-zoom leaflet-bar leaflet-control'>
+                        <a className='leaflet-control-zoom-in'
+                            // href='#'
+                            title='target'
+                            role='button'
+                        // onClick={(e) => {
+                        //     this.handleClick(e.target)
+                        // }}
+                        // onClick={map}
+                        >
+                            <i
+                                className='fas fa-crosshairs ml-3'
+                                style={{
+                                    fontSize: "17px",
+                                    marginLeft: "-2.5px"
+
+                                }}
+                            />
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </>
+
+    )
+}
 
 
 function LocationMarker(props) {
@@ -207,6 +271,9 @@ function LocationMarker(props) {
         };
     }, []);
 
+
+
+
     return (
         <>
             {/* <MapContainer
@@ -228,7 +295,7 @@ function LocationMarker(props) {
                     </Marker>
                 )
             })}
-            {polylinePositions.length > 1 && <Polyline positions={polylinePositions} />}
+            {polylinePositions.length > 1 && <Polyline positions={polylinePositions} color='brown' />}
             {/* </MapContainer> */}
         </>
     );
@@ -237,7 +304,26 @@ function LocationMarker(props) {
 
 function DisplayMarker(props) {
     const { espCoor } = props;
+    const { display } = props;
 
+    // const point = {
+    //     type: "Point",
+    //     coordinates: [10, 10],
+    // };
+
+    // const line = {
+    //     type: "LineString",
+    //     coordinates: [
+    //         [0, 0],
+    //         [10, 10],
+    //         [20, 20],
+    //     ],
+    // };
+
+    // const distance = distanceToLine(point, line)
+
+    // console.log(distance); // 14.142135623730951
+    // const polyline = L.polyline([], { color: 'red' }).addTo(map);
 
     const myIcon = new icon({
         iconSize: [90, 90],
@@ -247,15 +333,27 @@ function DisplayMarker(props) {
 
     const { lat, lng } = espCoor;
     const [prevPos, setPrevPos] = useState([lat, lng]);
+    const [polylinePositions, setPolylinePositions] = useState([]);
+
+    const handleClearClick = () => {
+        setPolylinePositions(polylinePositions.slice(-1));
+    };
 
     useEffect(() => {
         if (prevPos[1] !== lng && prevPos[0] !== lat) {
             setPrevPos([lat, lng]);
             // map.flyTo(prevPos, map.getZoom());
-
+            // polyline.addLatLng([lat, lng]);
         }
+        setPolylinePositions([...polylinePositions, [lat, lng]]);
+
         // setPrevPos([lat, lng]);
     }, [lat, lng, prevPos]);
+
+
+    // const { lat, lng } = espCoor;
+    // const polylinePositions = [[lat, lng]];
+    console.log(polylinePositions)
 
     return (
         <>
@@ -270,11 +368,18 @@ function DisplayMarker(props) {
                     {"Hello, there! 🐱‍🏍 "}
                     <br />
                     Latitude : {lat}, Longtude:{lng}
+                    <br />
+                    {/* <CalculateDistance /> */}
+                    <button onClick={handleClearClick}>Clear</button>
                 </Popup>
             </LeafletTrackingMarker>
+            {(polylinePositions.length > 1 && display == true) && <Polyline positions={polylinePositions} color='blue' />}
+
         </>
     );
 }
+
+
 
 
 export default connect()(MyMap);

@@ -39,8 +39,12 @@ const getExist = async () => {
     // return axios.get(`/api/query-setting`);
 }
 
-const changeSpeed = (value) => {
-    return axios.put(`${url}/api/edit-speed`, { value });
+const changeRound = (sp) => {
+    return axios.put(`${url}/api/edit-round`, { sp });
 }
 
-export { handleLogin, getAllUser, createNewUserService, deleteUserService, createCoor, getAllCoor, changeStatus, getExist, changeSpeed }
+const getDeviation = () => {
+    return axios.get(`${url}/api/esp/get-distance`);
+}
+
+export { handleLogin, getAllUser, createNewUserService, deleteUserService, createCoor, getAllCoor, changeStatus, getExist, changeRound, getDeviation }

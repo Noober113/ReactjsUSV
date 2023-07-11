@@ -6,6 +6,7 @@ import MyMap from './Map/MyMap';
 import { Map, TileLayer, MapContainer, Marker, Popup } from 'react-leaflet';
 import { emitter } from '../../utils/emitter';
 import { getAllCoor, getExist } from '../../services/userService';
+// import { HelpOutline } from '@material-ui/icons';
 
 
 
@@ -47,12 +48,13 @@ class HomePage extends Component {
                 let prevCheck = await getExist();
                 emitter.emit('CHECK_EXIST', prevCheck);
                 // console.log('pre', prevCheck);
-
                 setInterval(async () => {
                     let data = await getAllCoor();
-                    // console.log('lat:', data.data.users.value1, 'lng', data.data.users.value2)
+                    // console.log('lat:', Date.parse(data.data.users.createdAt))
                     if (data.data.users) {
                         emitter.emit('RECEIVE_FROM_ESP', { data });
+                        // console.log('lat1:', data.data.users)
+
                     }
                     if (this.state.send == true) {
                         let currentCheck = await getExist();
@@ -63,9 +65,7 @@ class HomePage extends Component {
                             prevCheck = currentCheck;
                         }
                     }
-
                 }, 200);
-
             } catch (e) {
                 console.log(e);
             }

@@ -118,10 +118,23 @@
     background-color: #fff;
   }
 
+  .left-panel-dash {
+    position        : absolute;
+    width           : calc(100% - 2rem);
+    height          : calc(90vh - 2rem);
+    left            : 1rem;
+    top             : 6rem;
+    z-index         : 1010;
+    background-color: #fff;
+    margin          : auto;
+
+
+  }
+
   .accordion-body {
-    padding : 1rem 1.25rem;
-    overflow: auto;
-    height  : 380px;
+    padding    : 1rem 1.25rem;
+    overflow   : auto;
+    // height  : 380px;
   }
 
   .item-number {
