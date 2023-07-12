@@ -353,7 +353,7 @@ function DisplayMarker(props) {
 
     // const { lat, lng } = espCoor;
     // const polylinePositions = [[lat, lng]];
-    console.log(polylinePositions)
+    // console.log(polylinePositions)
 
     return (
         <>

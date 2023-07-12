@@ -21,6 +21,7 @@ import { distanceSegment } from 'leaflet-geometryutil';
 import { point } from 'leaflet';
 // import { getDistanceFromLine } from 'geolib';
 import DashBoard from './DashBoard';
+import { Slider } from '@mui/material';
 
 
 
@@ -43,7 +44,7 @@ class HomeHeader extends Component {
             exist: false,
             Analysis: false,
             vl: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 },
-            speed: 0,
+            speed: 15,
             distance: [],
             boat: { lat: 0, lng: 0 },
             display: false,
@@ -90,6 +91,7 @@ class HomeHeader extends Component {
                     coorList: [],
                     stt: data[0].start,
                     round: data[0].round,
+                    speed: data[0].speed,
                 })
                 let i = 0;
                 for (i; i < data.length; i++) {
@@ -248,7 +250,7 @@ class HomeHeader extends Component {
             if (this.state.displayedCoordinates.length) {
                 try {
                     for (let i = 0; i < this.state.displayedCoordinates.length; i++) {
-                        let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round);
+                        let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round, this.state.speed);
                     };
                     emitter.emit('SENT_DATA',);
                 } catch (error) {
@@ -335,12 +337,23 @@ class HomeHeader extends Component {
 
     }
 
-    handleSpeed = (e) => {
-        this.setState({
-            speed: e.target.value
-        })
+    handleSpeed = (event, newValue) => {
+        if (event) {
+            const value = event.target.value;
+            console.log(value)
+            this.setState({
+                speed: value,
+            }, async () => {
 
-    }
+                try {
+                    await changeSpeed(this.state.speed);
+
+                } catch (error) {
+                    console.log(error)
+                }
+            });
+        }
+    };
     // handleOnChangeRadius = (event) => {
     //     let value = event.target.value;
 
@@ -554,9 +567,9 @@ class HomeHeader extends Component {
                                             <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" />
                                             <label class="form-check-label" for="flexSwitchCheckChecked">Display tracking</label>
                                         </div>
-                                        {/* <div>
+                                        <div style={{ marginInline: '1rem' }}>
                                             Speed control
-                                            <RangeSlider
+                                            {/* <RangeSlider
                                                 value={this.state.speed}
                                                 onChange={(e) => {
                                                     this.handleSpeed(e.target.value)
@@ -564,8 +577,17 @@ class HomeHeader extends Component {
                                                 step={1}
                                                 min={13}    
                                                 max={20}
+                                            /> */}
+                                            <Slider
+                                                aria-label="Speed machine"
+                                                valueLabelDisplay="auto"
+                                                defaultValue={15}
+                                                value={this.state.speed}
+                                                min={10}
+                                                max={20}
+                                                onChange={(event) => { this.handleSpeed(event) }}
                                             />
-                                        </div> */}
+                                        </div>
                                         {/* <Step /> */}
                                         <button type="button"
                                             className="btn btn-outline-primary startbut"

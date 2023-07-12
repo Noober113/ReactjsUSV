@@ -48,7 +48,7 @@ class Dashboard extends Component {
             try {
                 let data = await getDeviation();
                 let sensor = await getAllCoor();
-                console.log(sensor.data.users);
+                // console.log(sensor.data.users);
                 this.setState({
                     data: [...this.state.data, {
                         timestamp: new Date().getTime(),
@@ -178,7 +178,7 @@ class Dashboard extends Component {
                                                 ...this.state.sensor.map((d) => Math.max(d.s1, d.s2, d.s3, d.s4))
                                             )]}
                                         />
-                                        <ReferenceArea y1={0} y2={50} label="Dangerous" stroke="red" strokeOpacity={0.3} />
+                                        <ReferenceArea y1={0} y2={70} label="Dangerous" stroke="red" strokeOpacity={0.3} />
                                         <Tooltip content={<Custom />} />
                                         <Legend />
                                         <Line type="monotone" dataKey="s1" stroke="#8884d8" activeDot={{ r: 8 }} name='sensor 1' />
@@ -192,24 +192,7 @@ class Dashboard extends Component {
                         </div>
                         <div className='upperrow'>
                             <div className='upper-left' style={{ width: '50%' }}>
-                                <MapContainer
-                                    center={[10.8220589, 106.6867365]}
-                                    zoom={18}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%'
-                                    }}
-                                    zoomControl={false} // disable default zoom control
 
-                                >
-                                    <TileLayer
-                                        url="https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=198dcfa357864483bbc15b7aea665cfb"
-                                        attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> contributors'
-                                        maxZoom={20}
-                                    />
-                                    {/* add zoom control to top right corner  */}
-                                    <ZoomControl position="topright" />
-                                </MapContainer>
 
                             </div>
                             <div className='upper-cen' style={{ width: '30%' }} >
