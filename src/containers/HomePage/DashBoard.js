@@ -124,7 +124,7 @@ class Dashboard extends Component {
             <div>
 
                 <form>
-                    <div className='boz1 container-fluid'>
+                    <div className='boz1 container-fluid' style={{ overflow: 'hidden' }}>
                         <div className='upperrow'>
                             <div className='upper-left' style={{ width: '50%' }}>
                                 {/* <i> Deviation chart</i>
@@ -140,14 +140,14 @@ class Dashboard extends Component {
                                         }}>
                                         <XAxis dataKey="timestamp" type="number" domain={['auto', 'auto']}
                                             tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString()}>
-                                            <Label value="Deviation chart" offset={215} position="top" />
+                                            <Label value="Deviation chart" offset={300} position="top" />
                                         </XAxis>
                                         <YAxis dataKey="meters" unit="m"
                                         // label={{ value: 'Deviation Chart', angle: -90, position: 'left', offset: 0 }}
                                         />
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <Tooltip content={<CustomTooltip />} />
-                                        <Line type="monotone" dataKey="meters" stroke="#8884d8" activeDot={{ r: 8 }} />
+                                        <Line type="monotone" dataKey="meters" stroke="#8884d8" activeDot={{ r: 8 }} strokeWidth={2} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
@@ -172,46 +172,28 @@ class Dashboard extends Component {
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="timestamp" type="number" domain={['auto', 'auto']}
                                             tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString()}
-                                            label={{ value: 'Sensor Chart', position: 'top', offset: 195 }} />
+                                            label={{ value: 'Sensor Chart', position: 'top', offset: '280' }} />
                                         <YAxis unit="cm"
-                                            domain={[0, Math.max(
-                                                ...this.state.sensor.map((d) => Math.max(d.s1, d.s2, d.s3, d.s4))
-                                            )]}
+                                            domain={[0, 150
+                                                // Math.max(
+                                                // ...this.state.sensor.map((d) => Math.max(d.s1, d.s2, d.s3, d.s4)))
+                                            ]}
                                         />
-                                        <ReferenceArea y1={0} y2={70} label="Dangerous" stroke="red" strokeOpacity={0.3} />
+                                        <ReferenceArea y1={0} y2={50} label="Dangerous" stroke="red" strokeOpacity={0.3} />
                                         <Tooltip content={<Custom />} />
                                         <Legend />
-                                        <Line type="monotone" dataKey="s1" stroke="#8884d8" activeDot={{ r: 8 }} name='sensor 1' />
-                                        <Line type="monotone" dataKey="s2" stroke="#3f8a33" name='sensor 2' />
-                                        <Line type="monotone" dataKey="s3" stroke="#b8db00" name='sensor 3' />
-                                        <Line type="monotone" dataKey="s4" stroke="#bd79a5" name='sensor 4' />
+                                        <Line type="monotone" dataKey="s1" stroke="red" name='sensor 1' strokeWidth={2} />
+                                        <Line type="monotone" dataKey="s2" stroke="#07fa4c" name='sensor 2' strokeWidth={2} />
+                                        <Line type="monotone" dataKey="s3" stroke="blue" name='sensor 3' strokeWidth={2} />
+                                        <Line type="monotone" dataKey="s4" stroke="violet" name='sensor 4' strokeWidth={2} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
 
                         </div>
                         <div className='upperrow'>
-                            <div className='upper-left' style={{ width: '50%' }}>
+                            <div className='upper-left' style={{ width: '20%', display: 'block', margin: '3rem' }}>
 
-
-                            </div>
-                            <div className='upper-cen' style={{ width: '30%' }} >
-                                <div className='speed'>
-                                    < ReactSpeedometer
-                                        className='mr-auto '
-                                        minValue={0}
-                                        maxValue={5}
-                                        segments={1}
-                                        value={this.state.speed}
-                                        currentValueText="${value} km/h"
-
-                                    // height={'8rem'}
-                                    // width={'8rem'}
-                                    />
-                                </div>
-
-                            </div>
-                            <div className='upper-rih' style={{ display: 'block', width: '20%' }}>
                                 <i>
                                     Process: {this.state.allData.process}
                                 </i>
@@ -240,6 +222,35 @@ class Dashboard extends Component {
                                 <i>
                                     Longitude: {this.state.allData.lng}
                                 </i>
+                            </div>
+                            <div className='upper-cen' style={{ width: '60%' }} >
+                                <div className='speed'>
+                                    <div className='name_char'>
+                                        Speedometer
+                                    </div>
+                                    <div className='spedometer'>
+                                        < ReactSpeedometer
+                                            className='mr-auto '
+                                            minValue={0}
+                                            maxValue={5}
+                                            segments={1}
+                                            // width={'305px'}
+                                            value={this.state.speed}
+                                            currentValueText="${value} km/h"
+                                            // currentValueText="Speed chart"
+                                            needleColor='black'
+                                        // label='adsda'
+                                        // segmentColors={'red'}
+                                        // height={'8rem'}
+                                        // width={'8rem'}
+                                        />
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            <div className='upper-rih' style={{ width: '20%' }}>
+
                             </div>
 
                         </div>

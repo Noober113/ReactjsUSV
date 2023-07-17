@@ -21,8 +21,8 @@ const deleteUserService = (id) => {
     });
 }
 
-const createCoor = (lat, lng, stt, round, speed) => {
-    return axios.post(`${url}/api/create-coor`, { lat, lng, stt, round, speed });
+const createCoor = (lat, lng, stt, round, speed, speedF) => {
+    return axios.post(`${url}/api/create-coor`, { lat, lng, stt, round, speed, speedF });
 }
 
 const getAllCoor = () => {
@@ -47,8 +47,12 @@ const changeSpeed = (sp) => {
     return axios.put(`${url}/api/edit-speed`, { sp });
 }
 
+const changeSpeedF = (sp) => {
+    return axios.put(`${url}/api/edit-speedF`, { sp });
+}
+
 const getDeviation = () => {
     return axios.get(`${url}/api/esp/get-distance`);
 }
 
-export { handleLogin, getAllUser, createNewUserService, deleteUserService, createCoor, getAllCoor, changeStatus, getExist, changeRound, getDeviation, changeSpeed }
+export { handleLogin, getAllUser, createNewUserService, deleteUserService, createCoor, getAllCoor, changeStatus, getExist, changeRound, getDeviation, changeSpeed, changeSpeedF }

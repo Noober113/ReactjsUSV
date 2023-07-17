@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { formatDiagnosticsWithColorAndContext } from 'typescript';
 import './HomeHeader.scss';
 import { emitter } from '../../utils/emitter';
-import { createCoor, changeStatus, changeSpeed, changeRound } from '../../services/userService';
+import { createCoor, changeStatus, changeSpeed, changeRound, changeSpeedF } from '../../services/userService';
 import { round } from 'lodash';
 import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css';
 import RangeSlider from 'react-bootstrap-range-slider';
@@ -48,6 +48,7 @@ class HomeHeader extends Component {
             distance: [],
             boat: { lat: 0, lng: 0 },
             display: false,
+            speedF: 15,
         }
         this.listenToEmitter();
         // this.calculateDistance = this.calculateDistance.bind(this);
@@ -92,6 +93,7 @@ class HomeHeader extends Component {
                     stt: data[0].start,
                     round: data[0].round,
                     speed: data[0].speed,
+                    speedF: data[0].value_1,
                 })
                 let i = 0;
                 for (i; i < data.length; i++) {
@@ -250,7 +252,7 @@ class HomeHeader extends Component {
             if (this.state.displayedCoordinates.length) {
                 try {
                     for (let i = 0; i < this.state.displayedCoordinates.length; i++) {
-                        let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round, this.state.speed);
+                        let data = await createCoor(this.state.displayedCoordinates[i].lat, this.state.displayedCoordinates[i].lng, this.state.stt, this.state.round, this.state.speed, this.state.speedF);
                     };
                     emitter.emit('SENT_DATA',);
                 } catch (error) {
@@ -354,6 +356,25 @@ class HomeHeader extends Component {
             });
         }
     };
+
+    handleSpeedF = (event, newValue) => {
+        if (event) {
+            const value = event.target.value;
+            console.log(value)
+            this.setState({
+                speedF: value,
+            }, async () => {
+
+                try {
+                    await changeSpeedF(this.state.speedF);
+
+                } catch (error) {
+                    console.log(error)
+                }
+            });
+        }
+    };
+
     // handleOnChangeRadius = (event) => {
     //     let value = event.target.value;
 
@@ -492,7 +513,7 @@ class HomeHeader extends Component {
                                                     className={this.state.isShowList ? "accordion-collapse collapse show" : 'accordion-collapse collapse'} >
                                                     {/* <div id="collapseOne"
                                                     className="accordion-collapse collapse show"> */}
-                                                    <div className="accordion-body" style={{ height: "416px" }} >
+                                                    <div className="accordion-body" style={{ height: "273px" }} >
 
                                                         <ul className="list-group list-group-flush d-flex settingcoor" id="lstUnv" style={{ height: "388px", overflowY: "auto" }}>
                                                             <li className='pb-2 navbar navbar-fixed-top green child-nav' style={{ position: 'sticky', top: 0, zIndex: 1, background: "white" }}>
@@ -555,7 +576,7 @@ class HomeHeader extends Component {
                                         <div className="form-check form-switch"
                                             onChange={(event) => { this.handleAround(event) }}>
                                             <input className="form-check-input 1" type="checkbox" role="switch" id="flexSwitchCheckDefault" />
-                                            <label className="form-check-label" for="flexSwitchCheckDefault">Nonstop</label>
+                                            <label className="form-check-label" for="flexSwitchCheckDefault">Loop</label>
                                         </div>
                                         {/* <div className="form-check form-switch"
                                             onChange={(event) => { this.handleTrackingOn(event) }}
@@ -586,6 +607,27 @@ class HomeHeader extends Component {
                                                 min={10}
                                                 max={20}
                                                 onChange={(event) => { this.handleSpeed(event) }}
+                                            />
+                                        </div>
+                                        <div style={{ marginInline: '1rem' }}>
+                                            Speed forward motor control
+                                            {/* <RangeSlider
+                                                value={this.state.speed}
+                                                onChange={(e) => {
+                                                    this.handleSpeed(e.target.value)
+                                                }}
+                                                step={1}
+                                                min={13}    
+                                                max={20}
+                                            /> */}
+                                            <Slider
+                                                aria-label="Speed forward machine"
+                                                valueLabelDisplay="auto"
+                                                defaultValue={15}
+                                                value={this.state.speedF}
+                                                min={10}
+                                                max={20}
+                                                onChange={(event) => { this.handleSpeedF(event) }}
                                             />
                                         </div>
                                         {/* <Step /> */}
