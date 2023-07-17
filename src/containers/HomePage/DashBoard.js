@@ -77,7 +77,7 @@ class Dashboard extends Component {
                 console.log(e);
             }
             console.log(this.state.data)
-        }, 8000);
+        }, 2000);
 
     }
 

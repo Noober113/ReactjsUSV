@@ -19,7 +19,7 @@ class MyMap extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            espCoor: { lat: 10.8220589, lng: 106.6867365 },
+            espCoor: { lat: 10.8847207, lng: 106.6632720 },
             count: 0,
             radius: '',
             distance: null,
@@ -326,7 +326,7 @@ function DisplayMarker(props) {
     // const polyline = L.polyline([], { color: 'red' }).addTo(map);
 
     const myIcon = new icon({
-        iconSize: [90, 90],
+        iconSize: [45, 45],
         popupAnchor: [2, -20],
         iconUrl: airplane
     });
@@ -373,7 +373,7 @@ function DisplayMarker(props) {
                     <button onClick={handleClearClick}>Clear</button>
                 </Popup>
             </LeafletTrackingMarker>
-            {(polylinePositions.length > 1 && display == true) && <Polyline positions={polylinePositions} color='blue' />}
+            {(polylinePositions.length > 1 && display == true) && <Polyline positions={polylinePositions} color='blue' weight={'1'} dashOffset='5' dashArray={'10,5'} />}
 
         </>
     );
