@@ -36,8 +36,11 @@ class Dashboard extends Component {
                     maspeed: 0,
                     respeed: 0,
                     process: 0,
+                    date: 0,
+                    stt: null,
                 }
             ],
+            online: 1,
         }
         this.listenToEmitter = this.listenToEmitter.bind(this);
     }
@@ -70,13 +73,35 @@ class Dashboard extends Component {
                         maspeed: sensor.data.users.speed,
                         respeed: sensor.data.users.value_6,
                         process: sensor.data.users.value_5,
+                        date: sensor.data.users.createdAt,
+                        stt: sensor.data.users.status,
                     }
                 });
 
+                if (sensor.data.users.status) {
+                    alert('Phát hiện vật cản !!!!, không thể di chuyển')
+                }
+
+                let current = new Date().getTime();
+                let check = new Date(sensor.data.users.createdAt).getTime();
+                // const timestamp = check.getTime();
+                let diffTime = current - check;
+                if (diffTime < 60 * 1000) {
+                    // The current time is greater than the database time by 1 minute.
+                    this.setState({
+                        online: 1,
+                    })
+                } else {
+                    // The current time is not greater than the database time by 1 minute.
+                    this.setState({
+                        online: 0,
+                    })
+                }
+                // console.log(current, '-', check, '-', diffTime, this.state.online)
             } catch (e) {
                 console.log(e);
             }
-            console.log(this.state.data)
+            // console.log(this.state.data)
         }, 2000);
 
     }
@@ -86,7 +111,23 @@ class Dashboard extends Component {
     }
 
 
-
+    // checkDate = () => {
+    //     let current = new Date();
+    //     let i = this.state.allData.length - 1;
+    //     let check =  this.state.allData[i].date;
+    //     let diffTime = current - check;
+    //     if (diffTime > 60 * 1000) {
+    //         // The current time is greater than the database time by 1 minute.
+    //         this.setState({
+    //             online: 1
+    //         })
+    //     } else {
+    //         // The current time is not greater than the database time by 1 minute.
+    //         this.setState({
+    //             online: 0
+    //         })
+    //     }
+    // }
 
     render() {
         const CustomTooltip = ({ active, payload }) => {
@@ -179,7 +220,7 @@ class Dashboard extends Component {
                                                 // ...this.state.sensor.map((d) => Math.max(d.s1, d.s2, d.s3, d.s4)))
                                             ]}
                                         />
-                                        <ReferenceArea y1={0} y2={50} label="Dangerous" stroke="red" strokeOpacity={0.3} />
+                                        <ReferenceArea y1={0} y2={70} label="Dangerous" stroke="red" strokeOpacity={0.3} />
                                         <Tooltip content={<Custom />} />
                                         <Legend />
                                         <Line type="monotone" dataKey="s1" stroke="red" name='sensor 1' strokeWidth={2} />
@@ -250,7 +291,9 @@ class Dashboard extends Component {
 
                             </div>
                             <div className='upper-rih' style={{ width: '20%' }}>
-
+                                {/* <i class="far fa-check-circle" style={{ color: 'blue' }}> Online</i>
+                                <i class="far fa-times-circle" style={{ color: 'blue' }}></i> */}
+                                {this.state.online ? <i class="far fa-check-circle" style={{ color: 'blue' }}> Online</i> : <i class="far fa-times-circle" style={{ color: 'red' }}> Offline</i>}
                             </div>
 
                         </div>
